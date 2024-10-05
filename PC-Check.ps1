@@ -194,8 +194,24 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
     if ($pidVal -eq 0) {
         [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
     }
-$sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
+    elseif ($null -ne $pidVal) {
+        $process = Get-Process -Id $pidVal -ErrorAction SilentlyContinue
+        if ($process) {
+            $uptime = (Get-Date) - $process.StartTime
+            $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
+            [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
+        }
+        else {
+            [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
+        }
+    }
+    else {
+        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
+    }
 }
+
+$sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
+
 
 foreach ($entry in $processList1.GetEnumerator()) {
     $service = $entry.Key
