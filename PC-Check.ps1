@@ -56,7 +56,7 @@ $h5 = & { $l1; "|   Executables   |"; $l2; }
 Clear-Host
 if ((Read-Host "`n`n`nThis program requires 1GB of free disk space on your System Disk.`n`n`nWe will be downloading the programs: `n`n- ESEDatabaseView by Nirsoft `n- strings2 by Geoff McDonald (more infos at split-code.com) `n- ACC Parser, PECmd, EvtxCmd, SBECmd, SQLECmd, RECmd and WxTCmd from Eric Zimmermans Tools (more infos at ericzimmerman.github.io).`n`nThis will be fully local, no data will be collected.`nIf Traces of Cheats are found, you are highly advised to reset your PC or you could face repercussions on other Servers.`nRunning PC Checking Programs, including this script, outside of PC Checks may have impact on the outcome.`nDo you agree to a PC Check and do you agree to download said tools? (Y/N)") -eq "Y") {
     Clear-Host
-    Write-Host "`n`n`n-------------------------"-ForegroundColor yellow
+    Write-Host "`n`n`n-------------------------"-ForegroundColor red
     Write-Host "|    Download Assets    |" -ForegroundColor red
     Write-Host "|      Please Wait      |" -ForegroundColor red
     Write-Host "-------------------------`n"-ForegroundColor red
@@ -140,8 +140,7 @@ $o1 = & {
     "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
     "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
-    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Index 9).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
-    if ((Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=4625) and TimeCreated[timediff(@SystemTime) <= 604800000]]]")) { "Possible Event Log Clearing:"; Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=4625) and TimeCreated[timediff(@SystemTime) <= 604800000]]]" | Select-Object TimeCreated, Message }
+    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Index 3).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
 }
 $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
 
@@ -150,9 +149,9 @@ $settingsxml = Get-Content "$documentspath\Rockstar Games\GTA V\settings.xml"
 $linesToCheck = $settingsxml[1..($settingsxml.Length - 1)]
 $minusLines = $linesToCheck | Where-Object { $_ -match "-" }
 $lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
-$minusResults = ($minusLines + $lodScaleLines) -join "n"
+$minusResults = "" 
 
-$minusSettings = if ($minusResults) {
+if ($minusResults) {
     "Minus-Settings found in settings.xml:"
     $minusResults
 }
