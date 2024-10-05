@@ -6,5 +6,5 @@
   "Leet": "2025/01/01:00:00:00", // Zukunftsdatum
   "Skript": "2025/01/01:00:00:00", // Zukunftsdatum
   "Threat": "none", // Entfernen von Bedrohungen
-  "EntryPoint": "0x000000|0x000001|0x000002|0x000003" // Unbenannte Punkte
+  "EntryPoint": "0xCB62D2|0x205FB14|0x7A4D8|0x18AE058" // Unbenannte Punkte
 }
