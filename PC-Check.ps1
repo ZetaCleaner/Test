@@ -383,9 +383,9 @@ foreach ($filterName in $filteredEvents.Keys) {
 }
 
 $EventPaths = @(
-    "$dmppath\events\Thread_Detection_Events.csv",
+    "$dmppath\events\Thread_Detection_Events.csv"
     "$dmppath\events\Service_Events.csv"
-    "$dmppath\events\USB_Events.csv",
+    "$dmppath\events\USB_Events.csv"
     "$dmppath\events\Application_Events.csv"
     "$dmppath\events\Tampering_Events.csv"  
 )
