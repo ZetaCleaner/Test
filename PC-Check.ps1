@@ -149,25 +149,33 @@ $o1 = {
     "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Index 9).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
 }
 
-# Execute the script block
-$o1.Invoke()
-
-# Check for event log
-if (Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=1102) and TimeCreated[timediff(@SystemTime) <= 604800000]]]") {
-    # Event found, add logic here if needed
+$o1 = & {
+    $scripttime
+    "Connected Drives: $(Get-WmiObject Win32_LogicalDisk | Where-Object { ($_.DriveType -eq 3) -or ($_.DriveType -eq 2 -and $_.DeviceID -eq 'C:') } | ForEach-Object { "$($_.DeviceID)\" })" -join ', '
+    
+    "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' } | Where-Object { $_ -eq 'C:' }) { $regvolumes -join ', ' })"
+    
+    "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
+    
+    "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
+    
+    "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
+    
+    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Index 9).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
+    }
+   if ((Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=1102) and TimeCreated[timediff(@SystemTime) <= 604800000]]]")) {
 }
-
-$sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
+    $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
+}
 
 $documentspath = [System.Environment]::GetFolderPath('MyDocuments')
 $settingsxml = Get-Content "$documentspath\Rockstar Games\GTA V\settings.xml"
 $linesToCheck = $settingsxml[1..($settingsxml.Length - 1)]
 $minusLines = $linesToCheck | Where-Object { $_ -match "-" }
 $lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
-$minusResults = ($minusLines + $lodScaleLines) -join "`n"
+$minusResults = ($minusLines + $lodScaleLines) -join "n"
 
 $minusSettings = if ($minusResults) {
-    # Logic to handle minus settings
 }
 
 
