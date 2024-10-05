@@ -195,6 +195,7 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
         [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
     }
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
+}
 
 foreach ($entry in $processList1.GetEnumerator()) {
     $service = $entry.Key
