@@ -146,21 +146,24 @@ $o1 = & {
     
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
     
-    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Index 9).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
-    
-    $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
-    
-    $documentspath = [System.Environment]::GetFolderPath('MyDocuments')
-    $settingsxml = Get-Content "$documentspath\Rockstar Games\GTA V\settings.xml"
-    $linesToCheck = $settingsxml[1..($settingsxml.Length - 1)]
-    $minusLines = $linesToCheck | Where-Object { $_ -match "-" }
-    $lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
-    $minusResults = ($minusLines + $lodScaleLines) -join "`n"
+    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
+    if ((Get-Item "C:\Windows\Prefetch\taskkill.exe*").LastWriteTime ) { "Last Taskkill: $((Get-Item "C:\Windows\Prefetch\taskkill.exe*").LastWriteTime)" }
+    if ((Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=1102) and TimeCreated[timediff(@SystemTime) <= 604800000]]]")) { "Possible Event Log Clearing:"; Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=1102) and TimeCreated[timediff(@SystemTime) <= 604800000]]]" | Select-Object TimeCreated, Message }
+}
+$sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
 
-    $minusSettings = if ($minusResults) {
+$documentspath = [System.Environment]::GetFolderPath('MyDocuments')
+$settingsxml = Get-Content "$documentspath\Rockstar Games\GTA V\settings.xml"
+$linesToCheck = $settingsxml[1..($settingsxml.Length - 1)]
+$minusLines = $linesToCheck | Where-Object { $_ -match "-" }
+$lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
+$minusResults = ($minusLines + $lodScaleLines) -join "`n"
+
+$minusSettings = if ($minusResults) {
     "Minus-Settings found in settings.xml:"
     $minusResults
-    }
+}
+
 
 Write-Host "   Dumping Process Memory"-ForegroundColor yellow
 function Get-ProcessID {
