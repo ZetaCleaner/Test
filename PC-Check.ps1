@@ -36,7 +36,6 @@ $regpath = "C:\Temp\Dump\Registry"
 $shellbagspath = "C:\Temp\Dump\Shellbags"
 $shimcachepath = "C:\Temp\Dump\Shimcache"
 $winsearchpath = "C:\Temp\Dump\Winsearch"
-$scripttime = "Script-Run-Time: $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
 $directories = @('Timeline', 'Events\Raw', 'Journal', 'Others', 'Prefetch', 'Processes\Filtered', 'Processes\Raw', 'Registry', 'Shellbags', 'Shimcache', 'Winsearch')
 foreach ($dir in $directories) {
     New-Item -Path "$dmppath\$dir" -ItemType Directory -Force | Out-Null
@@ -140,7 +139,7 @@ $o1 = & {
     "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
     "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
-    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Index 3).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
+    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Third 1).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
 }
 $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
 
@@ -254,17 +253,17 @@ Where-Object { $_.'FileName' -match '\.exe.*|\.rar|\.zip|\.7z|\.bat|\.ps1|\.pf' 
 Select-Object 'FileName', 'Time', 'Reason', 'Reason#' |
 Export-Csv -Path "0_RawDump.csv" -Encoding utf8 -NoTypeInformation
 $dmp = Import-Csv "0_RawDump.csv"
-$dmp | Where-Object { $_.'FileName' -match "\.pf" -and ($_.'Reason#' -match "0x00001000|0x00002000") } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File DeletedPF.txt -Append
-$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x00000100' -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-String -Width 1000 | Format-Table -HideTableHeaders | Out-File CreatedFiles.txt -Append
-$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x80000200' } | Select-Object 'FileName', 'Time' | Out-String -Width 1000 | Out-File DeletedFiles.txt -Append
-$dmp | Where-Object { '0x00001000', '0x00002000' -contains $_.'Reason#' } | Sort-Object -Property Time -Descending | Group-Object "Time" | Format-Table -AutoSize @{l = "Timestamp"; e = { $_.Name } }, @{l = "Old Name"; e = { $_.Group.'FileName'[0] } }, @{l = "New Name"; e = { $_.Group.'FileName'[1] } } | Out-File -FilePath Renamed_Files.txt -Append
+$dmp | Where-Object { $_.'FileName' -match "\.pf" -and ($_.'Reason#' -match "0x00000000|0x00000000") } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File DeletedPF.txt -Append
+$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x00000000' -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-String -Width 1000 | Format-Table -HideTableHeaders | Out-File CreatedFiles.txt -Append
+$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x80000000' } | Select-Object 'FileName', 'Time' | Out-String -Width 1000 | Out-File DeletedFiles.txt -Append
+$dmp | Where-Object { '0x00000000', '0x00000000' -contains $_.'Reason#' } | Sort-Object -Property Time -Descending | Group-Object "Time" | Format-Table -AutoSize @{l = "Timestamp"; e = { $_.Name } }, @{l = "Old Name"; e = { $_.Group.'FileName'[0] } }, @{l = "New Name"; e = { $_.Group.'FileName'[1] } } | Out-File -FilePath Renamed_Files.txt -Append
 $dmp | Where-Object { $_.'FileName' -match '\.rpf' -and $_.'Reason#' -match '0x80000200|0x00000004|0x00000006|0x80000006' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Deletedrpf.txt -Append
 $dmp | Where-Object { $_.'FileName' -match '\.rar|\.zip|\.7z' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Compressed.txt -Append
-$dmp | Where-Object { $_.'FileName' -match "\.bat" -and $_.'Reason#' -match "0x00001000|0x80000200" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ModifiedBats.txt -Append
-$dmp | Where-Object { $_.'FileName' -match "\.exe" -and $_.'Reason#' -match "0x00080000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ObjectIDChange.txt -Append
+$dmp | Where-Object { $_.'FileName' -match "\.bat" -and $_.'Reason#' -match "0x00000000|0x80000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ModifiedBats.txt -Append
+$dmp | Where-Object { $_.'FileName' -match "\.exe" -and $_.'Reason#' -match "0x00000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ObjectIDChange.txt -Append
 $dmp | Where-Object { $_.'Reason' -match "Data Truncation" -and $_.'FileName' -match "\.exe" -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ReplacedExe.txt -Append
 $dmp | Where-Object { $_.'Reason#' -match "\?" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File EmptyCharacter.txt -Append
-$o2 = Get-Content "$dmppath\Journal\0_RawDump.csv" | Select-String -Pattern "1337|skript|usbdeview|loader_64|abby|ro9an|hitbox|gouhl|revolver|w32|vds|systeminformer|hacker" | Select-Object -ExpandProperty Line | Sort-Object -Unique
+$o2 = Get-Content "$dmppath\Journal\0_RawDump.csv" | Select-String -Pattern "niger|fotze|" | Select-Object -ExpandProperty Line | Sort-Object -Unique
 $o2 | Out-File Keywordsearch.txt
 $susJournal = if ($o2) { "Suspicious Files found in Journal" }
 Set-Location "$dmppath\prefetch"
@@ -272,7 +271,10 @@ Set-Location "$dmppath\prefetch"
 Write-Host "   Checking Dumping-File Integrity"-ForegroundColor yellow
 $files = @("$dmppath\prefetch\Prefetch.csv", "$shellbagspath\*Usrclass.csv", "$evtrawpath\Application.csv", "$evtrawpath\Security.csv", "$evtrawpath\System.csv", "$evtrawpath\Powershell.csv", "$evtrawpath\KernelPnp.csv", "$evtrawpath\Defender.csv", "$evtrawpath\Timeservice.csv")
 $missing = $files | Where-Object { -not (Test-Path $_) }
-if ($missing) { "Missing Files - Dump Failed:"; $missing }
+if ($missing -and $missing.Count -gt 0) { 
+    "Missing Files - Dump Failed:"; 
+    $missing 
+}
 
 $prefpath = "C:\temp\dump\prefetch\prefetch.csv"
 $prefcol = "ExecutableName", "SourceCreated", "SourceModified", "LastRun", "RunCount", "Hash", "PreviousRun0", "PreviousRun1", "PreviousRun2", "PreviousRun3", "PreviousRun4", "PreviousRun5", "PreviousRun6", "Volume0Serial", "FilesLoaded"
