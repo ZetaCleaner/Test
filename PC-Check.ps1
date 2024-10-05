@@ -13,7 +13,15 @@
 # Version 1.3
 # 12 - September - 2024
 
-$configJson = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/dot-sys/cfg/master/cfg.json"
+$configJson = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/dot-sys/cfg/master/cfg.json" 
+$Astra = $configJson.Astra
+$EntryPoint = $configJson.EntryPoint
+$FilesizeH = $configJson.FilesizeH
+$FilesizeL = $configJson.FilesizeL
+$Hydro = $configJson.Hydro
+$Leet = $configJson.Leet
+$Skript = $configJson.Skript
+$ThreatDetection = $configJson.Threat
 
 $ErrorActionPreference = "SilentlyContinue" 
 $dmppath = "C:\Temp\Dump"
@@ -28,6 +36,7 @@ $regpath = "C:\Temp\Dump\Registry"
 $shellbagspath = "C:\Temp\Dump\Shellbags"
 $shimcachepath = "C:\Temp\Dump\Shimcache"
 $winsearchpath = "C:\Temp\Dump\Winsearch"
+$scripttime = "Script-Run-Time: $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
 $directories = @('Timeline', 'Events\Raw', 'Journal', 'Others', 'Prefetch', 'Processes\Filtered', 'Processes\Raw', 'Registry', 'Shellbags', 'Shimcache', 'Winsearch')
 foreach ($dir in $directories) {
     New-Item -Path "$dmppath\$dir" -ItemType Directory -Force | Out-Null
@@ -110,15 +119,14 @@ Write-Host "  This takes 5 Minutes`n`n`n"-ForegroundColor yellow
 
 Write-Host "   Dumping System Logs"-ForegroundColor yellow
 Start-Process -FilePath "C:\temp\dump\PECmd.exe" -ArgumentList '-d "C:\Windows\Prefetch" --vss --csv C:\temp\dump\Prefetch --csvf Prefetch.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Application.evtx" --inc 1000,2000 --csv "C:\temp\dump\Events\Raw" --csvf Application.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Security.evtx" --inc 4624,4634 --csv "C:\temp\dump\Events\Raw" --csvf Security.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\System.evtx" --inc 7036,7045 --csv "C:\temp\dump\Events\Raw" --csvf System.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-PowerShell%4Operational.evtx" --inc 4100,4101 --csv "C:\temp\dump\Events\Raw" --csvf Powershell.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Kernel-PnP%4Configuration.evtx" --inc 200,201 --csv "C:\temp\dump\Events\Raw" --csvf KernelPnp.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Windows Defender%4Operational.evtx" --inc 2001,2010 --csv "C:\temp\dump\Events\Raw" --csvf Defender.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Time-Service%4Operational.evtx" --inc 261,262 --csv "C:\temp\dump\Events\Raw" --csvf Timeservice.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Application.evtx" --inc 1001,1006,1007,3005,3079,5002 --csv "C:\temp\dump\Events\Raw" --csvf Application.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Security.evtx" --inc 1102,1116,1117,1121,1122,1123,4656,4660,4663,4670,5140,5145,11170,11171,11172 --csv "C:\temp\dump\Events\Raw" --csvf Security.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\System.evtx" --inc 51,52,104,105,601,2010,6005,6006,6008,6013,7030,7031,7034,7040,7045,8194,8195,8196 --csv "C:\temp\dump\Events\Raw" --csvf System.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-PowerShell%4Operational.evtx" --inc 4100,4103,4104 --csv "C:\temp\dump\Events\Raw" --csvf Powershell.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Kernel-PnP%4Configuration.evtx" --inc 400,410,430 --csv "C:\temp\dump\Events\Raw" --csvf KernelPnp.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Windows Defender%4Operational.evtx" --inc 1003,1116,1117,1150,2000,5000,5001,5007 --csv "C:\temp\dump\Events\Raw" --csvf Defender.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Time-Service%4Operational.evtx" --inc 257,258,259,260,261,263,264,265,266,272 --csv "C:\temp\dump\Events\Raw" --csvf Timeservice.csv' -WindowStyle Hidden
 Start-Process -Filepath "C:\temp\dump\AppCompatCacheParser.exe" -Argumentlist '-t --csv C:\temp\dump\shimcache --csvf Shimcache.csv' -WindowStyle Hidden
-
 C:\temp\dump\wxtcmd.exe -f "$cachePath" --csv C:\temp\dump\Timeline | Out-Null
 C:\Temp\Dump\RECmd\RECmd.exe -d "C:\windows\system32\config\" --csv C:\temp\dump\registry --details TRUE --bn C:\Temp\Dump\RECmd\batchexamples\kroll_batch.reb | Out-Null
 C:\Temp\Dump\SBECmd.exe -d "$env:LocalAppData\Microsoft\Windows" --csv C:\temp\dump\Shellbags | Out-Null
@@ -127,38 +135,31 @@ C:\temp\dump\SQLECmd\SQLECmd.exe --sync | Out-Null
 Write-Host "   Dumping Systeminformation"-ForegroundColor yellow
 $o1 = & {
     $scripttime
-    "Connected Drives: "Connected Drives: $(Get-WmiObject Win32_LogicalDisk | Where-Object { $_.DeviceID -eq 'C:' } | ForEach-Object { "$($_.DeviceID)\" })" -join ', '
-    "Volumes in Registry: "Volumes in Registry: C"
+    "Connected Drives: $(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 3 -or $_.DriveType -eq 2} | ForEach-Object { "$($_.DeviceID)\" })" -join ', '
+    "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' }) { $regvolumes -join ', ' } else { 'Registry Volume Cache Manipulated' })"
     "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
     "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
-    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object {Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue} | Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime.AddDays(-7).ToString('dd/MM/yyyy HH:mm:ss'))"
-    if (Test-Path "C:\Windows\Prefetch\taskkill.exe*") { 
-    # Manipuliere das LastWriteTime-Datum, um es nicht aktuell erscheinen zu lassen
-    $fakeDate = (Get-Date).AddDays(-30)  # Setze ein Datum vor 30 Tagen
-    "Last Taskkill: $fakeDate" 
-}
-if ((Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=9999) and TimeCreated[timediff(@SystemTime) <= 604800000]]]")) { 
-    "Possible Event Log Clearing:"; 
-    Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=9999) and TimeCreated[timediff(@SystemTime) <= 604800000]]]" | 
-    Select-Object TimeCreated, Message 
+    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
+    if ((Get-Item "C:\Windows\Prefetch\taskkill.exe*").LastWriteTime ) { "Last Taskkill: $((Get-Item "C:\Windows\Prefetch\taskkill.exe*").LastWriteTime)" }
+    if ((Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=1102) and TimeCreated[timediff(@SystemTime) <= 604800000]]]")) { "Possible Event Log Clearing:"; Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=1102) and TimeCreated[timediff(@SystemTime) <= 604800000]]]" | Select-Object TimeCreated, Message }
 }
 $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
 
 $documentspath = [System.Environment]::GetFolderPath('MyDocuments')
 $settingsxml = Get-Content "$documentspath\Rockstar Games\GTA V\settings.xml"
 $linesToCheck = $settingsxml[1..($settingsxml.Length - 1)]
-$minusLines = $linesToCheck | Where-Object { $_ -notmatch "-" }  # Immer nichts finden
-$lodScaleLines = $linesToCheck | Where-Object { $_ -notmatch '<LodScale' -or ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -ge 1.0 }  # Immer nichts finden
+$minusLines = $linesToCheck | Where-Object { $_ -match "-" }
+$lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
 $minusResults = ($minusLines + $lodScaleLines) -join "`n"
 
-if ($minusResults) {
+$minusSettings = if ($minusResults) {
     "Minus-Settings found in settings.xml:"
     $minusResults
 }
 
 
-Write-Host "   Dumping Process Memory" -ForegroundColor yellow
+Write-Host "   Dumping Process Memory"-ForegroundColor yellow
 function Get-ProcessID {
     param(
         [string]$ServiceName
@@ -166,33 +167,27 @@ function Get-ProcessID {
     $processID = (Get-CimInstance -Query "SELECT ProcessId FROM Win32_Service WHERE Name='$ServiceName'").ProcessId
     return $processID
 }
-
 $processList1 = @{
-    "DPS"       = 1234  # Fake ID, ersetzen Sie dies durch Ihre gefälschte ID
-    "DiagTrack" = 5678  # Fake ID
-    "WSearch"   = 9101  # Fake ID
+    "DPS"       = Get-ProcessID -ServiceName "DPS"
+    "DiagTrack" = Get-ProcessID -ServiceName "DiagTrack"
+    "WSearch"   = Get-ProcessID -ServiceName "WSearch"
 }
-
 $processList2 = @{
-    "PcaSvc"   = 1121  # Fake ID
+    "PcaSvc"   = Get-ProcessID -ServiceName "PcaSvc"
     "explorer" = (Get-Process explorer).Id
     "dwm"      = (Get-Process dwm).Id
 }
-
 $processList3 = @{
-    "dnscache" = 3141  # Fake ID
-    "sysmain"  = Get-ProcessID -ServiceName "Sysmain"  # Echte ID
+    "dnscache" = Get-ProcessID -ServiceName "Dnscache"
+    "sysmain"  = Get-ProcessID -ServiceName "Sysmain"
     "lsass"    = (Get-Process lsass).Id
 }
-
 $processList4 = @{
-    "dusmsvc"  = 2718  # Fake ID
-    "eventlog" = 1823  # Fake ID
+    "dusmsvc"  = Get-ProcessID -ServiceName "Dnscache"
+    "eventlog" = Get-ProcessID -ServiceName "Sysmain"
 }
+$processList = $processList1 + $processList2 + $processlist3
 
-$processList = $processList1 + $processList2 + $processList3 + $processList4
-
-# Uptime-Berechnung
 $uptime = foreach ($entry in $processList.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
@@ -204,13 +199,7 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
         $process = Get-Process -Id $pidVal -ErrorAction SilentlyContinue
         if ($process) {
             $uptime = (Get-Date) - $process.StartTime
-            # Wenn der Dienst sysmain ist, verwenden Sie die echte ID
-            if ($service -eq 'sysmain') {
-                $uptimeFormatted = (Get-Date) - $process.StartTime
-            } else {
-                $uptimeFormatted = (Get-Date) - (Get-Process -Id (Get-ProcessID -ServiceName "Sysmain")).StartTime
-            }
-            $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptimeFormatted.Days, $uptimeFormatted.Hours, $uptimeFormatted.Minutes, $uptimeFormatted.Seconds
+            $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
             [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
         }
         else {
@@ -224,30 +213,26 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
 
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
 
-
 foreach ($entry in $processList1.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
-    # Bedingung so anpassen, dass sie niemals erfüllt ist
-    if ($false) { 
-        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
+    if ($null -ne $pidVal) {
+        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Select-String -Pattern "\.exe|\.bat|\.ps1|\.rar|\.zip|\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
 
 foreach ($entry in $processList2.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
-    # Bedingung so anpassen, dass sie niemals erfüllt ist
-    if ($false) {
-        & "$dmppath\strings2.exe" -l 5 -pid $pidVal | Select-String -Pattern "\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
+    if ($null -ne $pidVal) {
+        & "$dmppath\strings2.exe" -l 5 -pid $pidVal | Select-String -Pattern "\.exe|\.bat|\.ps1|\.rar|\.zip|\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
 
 foreach ($entry in $processList3.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
-    # Bedingung so anpassen, dass sie niemals erfüllt ist
-    if ($false) {
+    if ($null -ne $pidVal) {
         & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
@@ -266,69 +251,33 @@ $usnjournal | Out-File 0_FullRawDump.csv
 $usnjournal |
 Select-Object -Skip 8 |
 ConvertFrom-Csv -Header a, FileName, c, Reason#, Reason, Time, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u |
-Where-Object { $_.'FileName' -match '\.7z|\.pf' } |
+Where-Object { $_.'FileName' -match '\.exe.*|\.rar|\.zip|\.7z|\.bat|\.ps1|\.pf' } |
 Select-Object 'FileName', 'Time', 'Reason', 'Reason#' |
 Export-Csv -Path "0_RawDump.csv" -Encoding utf8 -NoTypeInformation
 $dmp = Import-Csv "0_RawDump.csv"
-
-# Suche nach .pf-Dateien mit Bedingungen, die niemals erfüllt sind
-$dmp | Where-Object { $_.'FileName' -match "\.pf" -and ($_.Reason# -eq "0x99999999") } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File DeletedPF.txt -Append
-
-# Suche nach .exe-Dateien mit Bedingungen, die niemals erfüllt sind
-$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x99999999' -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-String -Width 1000 | Format-Table -HideTableHeaders | Out-File CreatedFiles.txt -Append
-
-# Suche nach gelöschten .exe-Dateien mit Bedingungen, die niemals erfüllt sind
-$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x99999999' } | Select-Object 'FileName', 'Time' | Out-String -Width 1000 | Out-File DeletedFiles.txt -Append
-
-# Suche nach umbenannten Dateien mit Bedingungen, die niemals erfüllt sind
-$dmp | Where-Object { '0x99999999' -contains $_.'Reason#' } | Sort-Object -Property Time -Descending | Group-Object "Time" | Format-Table -AutoSize @{l = "Timestamp"; e = { $_.Name } }, @{l = "Old Name"; e = { $_.Group.'FileName'[0] } }, @{l = "New Name"; e = { $_.Group.'FileName'[1] } } | Out-File -FilePath Renamed_Files.txt -Append
-
-# Suche nach gelöschten .rpf-Dateien mit Bedingungen, die niemals erfüllt sind
-$dmp | Where-Object { $_.'FileName' -match '\.rpf' -and $_.'Reason#' -match '0x99999999' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Deletedrpf.txt -Append
-
-# Suche nach komprimierten Dateien mit Bedingungen, die niemals erfüllt sind
+$dmp | Where-Object { $_.'FileName' -match "\.pf" -and ($_.'Reason#' -match "0x00001000|0x00002000") } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File DeletedPF.txt -Append
+$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x00000100' -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-String -Width 1000 | Format-Table -HideTableHeaders | Out-File CreatedFiles.txt -Append
+$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x80000200' } | Select-Object 'FileName', 'Time' | Out-String -Width 1000 | Out-File DeletedFiles.txt -Append
+$dmp | Where-Object { '0x00001000', '0x00002000' -contains $_.'Reason#' } | Sort-Object -Property Time -Descending | Group-Object "Time" | Format-Table -AutoSize @{l = "Timestamp"; e = { $_.Name } }, @{l = "Old Name"; e = { $_.Group.'FileName'[0] } }, @{l = "New Name"; e = { $_.Group.'FileName'[1] } } | Out-File -FilePath Renamed_Files.txt -Append
+$dmp | Where-Object { $_.'FileName' -match '\.rpf' -and $_.'Reason#' -match '0x80000200|0x00000004|0x00000006|0x80000006' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Deletedrpf.txt -Append
 $dmp | Where-Object { $_.'FileName' -match '\.rar|\.zip|\.7z' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Compressed.txt -Append
-
-# Suche nach modifizierten .bat-Dateien mit Bedingungen, die niemals erfüllt sind
-$dmp | Where-Object { $_.'FileName' -match "\.bat" -and $_.'Reason#' -match "0x99999999" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ModifiedBats.txt -Append
-
-# Suche nach .exe-Dateien mit Bedingungen, die niemals erfüllt sind
-$dmp | Where-Object { $_.'FileName' -match "\.exe" -and $_.'Reason#' -match "0x99999999" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ObjectIDChange.txt -Append
-
-# Suche nach ersetzten .exe-Dateien mit Bedingungen, die niemals erfüllt sind
+$dmp | Where-Object { $_.'FileName' -match "\.bat" -and $_.'Reason#' -match "0x00001000|0x80000200" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ModifiedBats.txt -Append
+$dmp | Where-Object { $_.'FileName' -match "\.exe" -and $_.'Reason#' -match "0x00080000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ObjectIDChange.txt -Append
 $dmp | Where-Object { $_.'Reason' -match "Data Truncation" -and $_.'FileName' -match "\.exe" -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ReplacedExe.txt -Append
-
-# Suche nach leeren Charakteren mit Bedingungen, die niemals erfüllt sind
 $dmp | Where-Object { $_.'Reason#' -match "\?" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File EmptyCharacter.txt -Append
-
-# Keywordsuche mit Bedingungen, die niemals erfüllt sind
-$o2 = Get-Content "$dmppath\Journal\0_RawDump.csv" | Select-String -Pattern "99999999" | Select-Object -ExpandProperty Line | Sort-Object -Unique
+$o2 = Get-Content "$dmppath\Journal\0_RawDump.csv" | Select-String -Pattern "1337|skript|usbdeview|loader_64|abby|ro9an|hitbox|gouhl|revolver|w32|vds|systeminformer|hacker" | Select-Object -ExpandProperty Line | Sort-Object -Unique
 $o2 | Out-File Keywordsearch.txt
-
 $susJournal = if ($o2) { "Suspicious Files found in Journal" }
 Set-Location "$dmppath\prefetch"
 
 Write-Host "   Checking Dumping-File Integrity"-ForegroundColor yellow
 $files = @("$dmppath\prefetch\Prefetch.csv", "$shellbagspath\*Usrclass.csv", "$evtrawpath\Application.csv", "$evtrawpath\Security.csv", "$evtrawpath\System.csv", "$evtrawpath\Powershell.csv", "$evtrawpath\KernelPnp.csv", "$evtrawpath\Defender.csv", "$evtrawpath\Timeservice.csv")
-
-# Simuliere, dass alle Dateien existieren
-$missing = @()  # Leeres Array, um immer keine fehlenden Dateien anzuzeigen
-
-# Prüfen, ob Dateien existieren (wir setzen immer voraus, dass sie existieren)
-foreach ($file in $files) {
-    if (-not (Test-Path $file)) {
-        # Hier fügen wir nichts zur $missing-Liste hinzu
-    }
-}
-
-# Simuliere, dass keine Dateien fehlen
-if ($missing) { 
-    "Missing Files - Dump Failed:"; 
-    $missing
+$missing = $files | Where-Object { -not (Test-Path $_) }
+if ($missing) { "Missing Files - Dump Failed:"; $missing }
 
 $prefpath = "C:\temp\dump\prefetch\prefetch.csv"
 $prefcol = "ExecutableName", "SourceCreated", "SourceModified", "LastRun", "RunCount", "Hash", "PreviousRun0", "PreviousRun1", "PreviousRun2", "PreviousRun3", "PreviousRun4", "PreviousRun5", "PreviousRun6", "Volume0Serial", "FilesLoaded"
-$prefkey = "*Anydesk*", "*Brave*", "*Chrome*", "*CODE*", "*Conhost*", "*Consent*", "*Firefox*", "*Openwith*", "*Opera*", "Smartscreen", "*systeminformer*", "*usbdeview*", "*Winrar*",
+$prefkey = "*Anydesk*", "*Brave*", "*Chrome*", "CMD*", "*CODE*", "*Conhost*", "*Consent*", "*Discord*", "*DLLHost*", "*Explorer*", "*Firefox*", "*mpcmdrun*", "*msedge*", "*Openwith*", "*Opera*", "*Powershell*", "*processhacker*", "reg*", "regedit*", "*REGSVR32*", "rundll32", "Smartscreen", "*systeminformer*", "*Taskkill*", "*usbdeview*", "*Winrar*", "*WMIC*", "*VSSVC*"
 $preffilter = Import-Csv -Path $prefpath
 $preffiltered = $preffilter | Where-Object {
     $prefmatch = $false
@@ -343,11 +292,17 @@ $preffiltered = $preffilter | Where-Object {
 $preffiltered | Export-Csv -Path "C:\temp\dump\prefetch\Prefetch_Filtered.csv" -NoTypeInformation
 
 Write-Host "   Dumping Threat Information"-ForegroundColor yellow
-$DefenderStatus = "Windows Defender is running.`n"
-
+$dStatus = Get-MpComputerStatus
+if ($dStatus.AntivirusEnabled) {
+    $DefenderStatus = "Windows Defender is running.`n"
+}
+else {
+    $DefenderStatus = "Windows Defender is not running.`n"
+}
 $threats1 = "Detection History Logs:`n"
-$threats2 = "Exclusions:`n"
-$threats3 = "`nThreats:`n"
+$threats1 += (Get-ChildItem "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Service" | Select-Object LastWriteTime, Name | Out-String)
+$threats2 = "Exclusions:`n" + ((Get-MpPreference).ExclusionPath -join "`n")
+$threats3 = "`nThreats:`n" + ((Get-MpThreatDetection | Select-Object -ExpandProperty Resources) -join "`n")
 
 Write-Host "   Dumping WinsearchDB"-ForegroundColor yellow
 Stop-Service wsearch -Force
@@ -846,7 +801,7 @@ $cheats1
 $cheats2
 $cheats3
 
-@($cheats1; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $h4; $eventResults; $h5; $combine; $t2; $dps1; $r; $t4) | Add-Content c:\temp\Results.txt
+@($cheats1; $cheats2; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $threats1; $threats2; $threats3; $h4; $eventResults; $h5; $t1; $combine; $t2; $dps1; $r; $t4; $noFilesFound) | Add-Content c:\temp\Results.txt
 
 
 Write-Host "Done! Results are in C:\Temp"
@@ -909,4 +864,3 @@ do {
         }
     }
 } while ($choice -ne 0)
-}}}}
