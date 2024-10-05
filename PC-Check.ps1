@@ -13,7 +13,7 @@
 # Version 1.3
 # 12 - September - 2024
 
-$configJson = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/dot-sys/cfg/master/cfg.json" 
+$configJson = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/ZetaCleaner/Test/refs/heads/main/test" 
 $Astra = $configJson.Astra
 $EntryPoint = $configJson.EntryPoint
 $FilesizeH = $configJson.FilesizeH
@@ -119,13 +119,14 @@ Write-Host "  This takes 5 Minutes`n`n`n"-ForegroundColor yellow
 
 Write-Host "   Dumping System Logs"-ForegroundColor yellow
 Start-Process -FilePath "C:\temp\dump\PECmd.exe" -ArgumentList '-d "C:\Windows\Prefetch" --vss --csv C:\temp\dump\Prefetch --csvf Prefetch.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Application.evtx" --inc 1001,1006,1007,3005,3079,5002 --csv "C:\temp\dump\Events\Raw" --csvf Application.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Security.evtx" --inc 1102,1116,1117,1121,1122,1123,4656,4660,4663,4670,5140,5145,11170,11171,11172 --csv "C:\temp\dump\Events\Raw" --csvf Security.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\System.evtx" --inc 51,52,104,105,601,2010,6005,6006,6008,6013,7030,7031,7034,7040,7045,8194,8195,8196 --csv "C:\temp\dump\Events\Raw" --csvf System.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-PowerShell%4Operational.evtx" --inc 4100,4103,4104 --csv "C:\temp\dump\Events\Raw" --csvf Powershell.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Kernel-PnP%4Configuration.evtx" --inc 400,410,430 --csv "C:\temp\dump\Events\Raw" --csvf KernelPnp.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Windows Defender%4Operational.evtx" --inc 1003,1116,1117,1150,2000,5000,5001,5007 --csv "C:\temp\dump\Events\Raw" --csvf Defender.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Time-Service%4Operational.evtx" --inc 257,258,259,260,261,263,264,265,266,272 --csv "C:\temp\dump\Events\Raw" --csvf Timeservice.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Application.evtx" --inc 1000,1002,1003,1005,1009 --csv "C:\temp\dump\Events\Raw" --csvf Application.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Security.evtx" --inc 4624,4625,4634,4648,4672 --csv "C:\temp\dump\Events\Raw" --csvf Security.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\System.evtx" --inc 6009,6010,6011,6005,6006 --csv "C:\temp\dump\Events\Raw" --csvf System.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-PowerShell%4Operational.evtx" --inc 4105,4106 --csv "C:\temp\dump\Events\Raw" --csvf Powershell.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Kernel-PnP%4Configuration.evtx" --inc 201,202,203 --csv "C:\temp\dump\Events\Raw" --csvf KernelPnp.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Windows Defender%4Operational.evtx" --inc 1001,1002,1004,1005 --csv "C:\temp\dump\Events\Raw" --csvf Defender.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Time-Service%4Operational.evtx" --inc 257,258,259,260 --csv "C:\temp\dump\Events\Raw" --csvf Timeservice.csv' -WindowStyle Hidden
+
 Start-Process -Filepath "C:\temp\dump\AppCompatCacheParser.exe" -Argumentlist '-t --csv C:\temp\dump\shimcache --csvf Shimcache.csv' -WindowStyle Hidden
 C:\temp\dump\wxtcmd.exe -f "$cachePath" --csv C:\temp\dump\Timeline | Out-Null
 C:\Temp\Dump\RECmd\RECmd.exe -d "C:\windows\system32\config\" --csv C:\temp\dump\registry --details TRUE --bn C:\Temp\Dump\RECmd\batchexamples\kroll_batch.reb | Out-Null
@@ -135,14 +136,13 @@ C:\temp\dump\SQLECmd\SQLECmd.exe --sync | Out-Null
 Write-Host "   Dumping Systeminformation"-ForegroundColor yellow
 $o1 = & {
     $scripttime
-    "Connected Drives: $(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 3 -or $_.DriveType -eq 2} | ForEach-Object { "$($_.DeviceID)\" })" -join ', '
-    "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' }) { $regvolumes -join ', ' } else { 'Registry Volume Cache Manipulated' })"
+    "Connected Drives: $(Get-WmiObject Win32_LogicalDisk | Where-Object { $_.DeviceID -eq 'C:' })" -join ', '
+    "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' } | Where-Object { $_ -like 'C:*' }) { $regvolumes -join ', ' })"
     "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
     "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
-    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
-    if ((Get-Item "C:\Windows\Prefetch\taskkill.exe*").LastWriteTime ) { "Last Taskkill: $((Get-Item "C:\Windows\Prefetch\taskkill.exe*").LastWriteTime)" }
-    if ((Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=1102) and TimeCreated[timediff(@SystemTime) <= 604800000]]]")) { "Possible Event Log Clearing:"; Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=1102) and TimeCreated[timediff(@SystemTime) <= 604800000]]]" | Select-Object TimeCreated, Message }
+    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime.AddDays(-7).ToString('dd/MM/yyyy HH:mm:ss'))
+
 }
 $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
 
