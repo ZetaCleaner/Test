@@ -841,7 +841,7 @@ do {
         default {
             Write-Host "`n`nInvalid option selected. Please try again." -ForegroundColor red
             Start-Sleep 3
-        }\\
-    }
+    
+    }}}
 } while ($choice -ne 0)
 }}}
