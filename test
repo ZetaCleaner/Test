@@ -1,0 +1,10 @@
+{
+  "FilesizeL": 500000,  // Niedrigere Größe
+  "FilesizeH": 5000000, // Niedrigere Größe
+  "Astra": "2025/01/01:00:00:00", // Zukunftsdatum
+  "Hydro": "2025/01/01:00:00:00|2025/01/01:00:00:00", // Zukunftsdatum
+  "Leet": "2025/01/01:00:00:00", // Zukunftsdatum
+  "Skript": "2025/01/01:00:00:00", // Zukunftsdatum
+  "Threat": "none", // Entfernen von Bedrohungen
+  "EntryPoint": "0x000000|0x000001|0x000002|0x000003" // Unbenannte Punkte
+}
