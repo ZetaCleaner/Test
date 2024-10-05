@@ -150,12 +150,16 @@ $o1 = & {
     
     $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
 
-$documentspath = [System.Environment]::GetFolderPath('MyDocuments')
-$settingsxml = Get-Content "$documentspath\Rockstar Games\GTA V\settings.xml"
-$linesToCheck = $settingsxml[1..($settingsxml.Length - 1)]
-$minusLines = $linesToCheck | Where-Object { $_ -match "-" }
-$lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
-$minusResults = ($minusLines + $lodScaleLines) -join "n"
+    $documentspath = [System.Environment]::GetFolderPath('MyDocuments')
+    $settingsxml = Get-Content "$documentspath\Rockstar Games\GTA V\settings.xml"
+    $linesToCheck = $settingsxml[1..($settingsxml.Length - 1)]
+    $minusLines = $linesToCheck | Where-Object { $_ -match "-" }
+    $lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
+    $minusResults = ($minusLines + $lodScaleLines) -join "`n"  # Hier war "n" statt "`n"
+    
+    # Hier könnte noch eine Ausgabe oder Rückgabe folgen, falls notwendig.
+}  # Füge diese schließende Klammer hinzu
+
 
 
 
