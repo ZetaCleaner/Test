@@ -159,9 +159,6 @@ $minusLines = $linesToCheck | Where-Object { $_ -match "-" }
 $lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
 $minusResults = ($minusLines + $lodScaleLines) -join "n"
 
-$minusSettings = if ($minusResults) {
-}
-
 
 
 
