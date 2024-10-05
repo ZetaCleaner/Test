@@ -150,10 +150,9 @@ $settingsxml = Get-Content "$documentspath\Rockstar Games\GTA V\settings.xml"
 $linesToCheck = $settingsxml[1..($settingsxml.Length - 1)]
 $minusLines = $linesToCheck | Where-Object { $_ -match "-" }
 $lodScaleLines = $linesToCheck | Where-Object { $_ -match '<LodScale' -and ([float]($_ -replace '.*value="([0-9.]+)".*', '$1')) -lt 1.0 }
+$minusResults = ($minusLines + $lodScaleLines) -join "n"
 
-$minusResults = ""  
-
-if ($minusResults) {
+$minusSettings = if ($minusResults) {
     "Minus-Settings found in settings.xml:"
     $minusResults
 }
