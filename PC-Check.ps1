@@ -185,7 +185,7 @@ $processList4 = @{
     "dusmsvc"  = Get-ProcessID -ServiceName "Dnscache"
     "eventlog" = Get-ProcessID -ServiceName "Sysmain"
 }
-$processList = $processList1 + $processList2 + $processlist3
+$processList = $processList1 + $processList2 + $processList3
 
 $uptime = foreach ($entry in $processList.GetEnumerator()) {
     $service = $entry.Key
@@ -194,14 +194,6 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
     if ($pidVal -eq 0) {
         [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
     }
-    elseif ($null -ne $pidVal) {
-        $process = Get-Process -Id $pidVal -ErrorAction SilentlyContinue
-        if ($process) {
-            $uptime = (Get-Date) - $process.StartTime
-            $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
-            [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
-        }
-
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
 
 foreach ($entry in $processList1.GetEnumerator()) {
