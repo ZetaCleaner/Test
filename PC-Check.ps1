@@ -13,14 +13,7 @@
 # Version 1.3
 # 12 - September - 2024
 
-$configJson = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/dot-sys/cfg/master/cfg.json" 
-$Astra = $configJson.Astra
-$EntryPoint = $configJson.EntryPoint
-$FilesizeH = $configJson.FilesizeH
-$FilesizeL = $configJson.FilesizeL
-$Hydro = $configJson.Hydro
-$Skript = $configJson.Skript
-$ThreatDetection = $configJson.Threat
+$configJson = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/dot-sys/cfg/master/cfg.json"
 
 $ErrorActionPreference = "SilentlyContinue" 
 $dmppath = "C:\Temp\Dump"
@@ -853,7 +846,7 @@ $cheats1
 $cheats2
 $cheats3
 
-@($cheats1; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $h4; $eventResults; $h5; $t1; $combine; $t2; $dps1; $r; $t4; $noFilesFound) | Add-Content c:\temp\Results.txt
+@($cheats1; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $h4; $eventResults; $h5; $combine; $t2; $dps1; $r; $t4) | Add-Content c:\temp\Results.txt
 
 
 Write-Host "Done! Results are in C:\Temp"
