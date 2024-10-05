@@ -13,7 +13,7 @@
 # Version 1.3
 # 12 - September - 2024
 
-$configJson = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/dot-sys/cfg/master/cfg.json" 
+$configJson = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/ZetaCleaner/Test/refs/heads/main/test" 
 $Astra = $test.Astra
 $EntryPoint = $test.EntryPoint
 $FilesizeH = $test.FilesizeH
