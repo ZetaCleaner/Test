@@ -36,7 +36,6 @@ $regpath = "C:\Temp\Dump\Registry"
 $shellbagspath = "C:\Temp\Dump\Shellbags"
 $shimcachepath = "C:\Temp\Dump\Shimcache"
 $winsearchpath = "C:\Temp\Dump\Winsearch"
-$scripttime = "Script-Run-Time: $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
 $directories = @('Timeline', 'Events\Raw', 'Journal', 'Others', 'Prefetch', 'Processes\Filtered', 'Processes\Raw', 'Registry', 'Shellbags', 'Shimcache', 'Winsearch')
 foreach ($dir in $directories) {
     New-Item -Path "$dmppath\$dir" -ItemType Directory -Force | Out-Null
@@ -140,8 +139,8 @@ $o1 = & {
     "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
     "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
-    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Index 9).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
-    if ((Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=4625) and TimeCreated[timediff(@SystemTime) <= 604800000]]]")) { "Possible Event Log Clearing:"; Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=4625) and TimeCreated[timediff(@SystemTime) <= 604800000]]]" | Select-Object TimeCreated, Message }
+    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Index 3).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
+
 }
 $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
 
@@ -168,7 +167,7 @@ function Get-ProcessID {
     return $processID
 }
 $processList1 = @{
-    "DPS"       = (Get-Process dps).Id
+    "DPS"       = Get-ProcessID -ServiceName "DPS"
     "DiagTrack" = Get-ProcessID -ServiceName "DiagTrack"
     "WSearch"   = Get-ProcessID -ServiceName "WSearch"
 }
@@ -202,14 +201,6 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
             $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
             [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
         }
-        else {
-            [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
-        }
-    }
-    else {
-        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
-    }
-}
 
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
 
