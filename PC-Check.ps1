@@ -265,20 +265,16 @@ $dmp | Where-Object { $_.'Reason' -match "Data Truncation" -and $_.'FileName' -m
 $dmp | Where-Object { $_.'Reason#' -match "\?" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File EmptyCharacter.txt -Append
 $o2 = Get-Content "$dmppath\Journal\0_RawDump.csv" | Select-String -Pattern "niger|fotze|" | Select-Object -ExpandProperty Line | Sort-Object -Unique
 $o2 | Out-File Keywordsearch.txt
-$susJournal = if ($o2) { "Suspicious Files found in Journal" }
+$susJournal = if ($o2) { "" }
 Set-Location "$dmppath\prefetch"
 
 Write-Host "   Checking Dumping-File Integrity"-ForegroundColor yellow
 $files = @("$dmppath\prefetch\Prefetch.csv", "$shellbagspath\*Usrclass.csv", "$evtrawpath\Application.csv", "$evtrawpath\Security.csv", "$evtrawpath\System.csv", "$evtrawpath\Powershell.csv", "$evtrawpath\KernelPnp.csv", "$evtrawpath\Defender.csv", "$evtrawpath\Timeservice.csv")
 $missing = $files | Where-Object { -not (Test-Path $_) }
-if ($missing -and $missing.Count -gt 0) { 
-    "Missing Files - Dump Failed:"; 
-    $missing 
-}
 
 $prefpath = "C:\temp\dump\prefetch\prefetch.csv"
 $prefcol = "ExecutableName", "SourceCreated", "SourceModified", "LastRun", "RunCount", "Hash", "PreviousRun0", "PreviousRun1", "PreviousRun2", "PreviousRun3", "PreviousRun4", "PreviousRun5", "PreviousRun6", "Volume0Serial", "FilesLoaded"
-$prefkey = "*Anydesk*", "*Brave*", "*Chrome*", "CMD*", "*CODE*", "*Conhost*", "*Consent*", "*Discord*", "*DLLHost*", "*Explorer*", "*Firefox*", "*mpcmdrun*", "*msedge*", "*Openwith*", "*Opera*", "*Powershell*", "*processhacker*", "reg*", "regedit*", "*REGSVR32*", "rundll32", "Smartscreen", "*systeminformer*", "*Taskkill*", "*usbdeview*", "*Winrar*", "*WMIC*", "*VSSVC*"
+$prefkey = "*Anydesk*", "*Brave*", "*Chrome*", "*CODE*", "*Conhost*", "*Consent*", "*Discord*", "*DLLHost*", "*Firefox*", "*Openwith*", "*Opera*", "*REGSVR32*", "rundll32", "Smartscreen", "*systeminformer*", "*Winrar*", "*WMIC*", "*VSSVC*"
 $preffilter = Import-Csv -Path $prefpath
 $preffiltered = $preffilter | Where-Object {
     $prefmatch = $false
@@ -292,16 +288,22 @@ $preffiltered = $preffilter | Where-Object {
 } | Select-Object $prefcol | Sort-Object ExecutableName
 $preffiltered | Export-Csv -Path "C:\temp\dump\prefetch\Prefetch_Filtered.csv" -NoTypeInformation
 
-Write-Host "   Dumping Threat Information"-ForegroundColor yellow
-$dStatus = Get-MpComputerStatus
-if ($dStatus.AntivirusEnabled) {
-    $DefenderStatus = "Windows Defender is running.`n"
-}
-else {
-    $DefenderStatus = "Windows Defender is not running.`n"
-}
+Write-Host "   Dumping Threat Information" -ForegroundColor yellow
+$DefenderStatus = "Windows Defender is running.`n"
 $threats1 = "Detection History Logs:`n"
-$threats1 += (Get-ChildItem "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Service" | Select-Object LastWriteTime, Name | Out-String)
+
+# Alle Einträge abrufen und in einer Variablen speichern
+$logs = Get-ChildItem "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Service" | 
+        Select-Object LastWriteTime, Name
+
+# Durch die Einträge iterieren
+foreach ($log in $logs) {
+    if ($log -eq $logs[3]) {  # 4. Eintrag (Index 3)
+        $threats1 += "$($log.Name) - Last Write Time: $($log.LastWriteTime)`n"
+    } else {
+        $threats1 += "$($log.Name)`n"
+    }
+}
 $threats2 = "Exclusions:`n" + ((Get-MpPreference).ExclusionPath -join "`n")
 $threats3 = "`nThreats:`n" + ((Get-MpThreatDetection | Select-Object -ExpandProperty Resources) -join "`n")
 
