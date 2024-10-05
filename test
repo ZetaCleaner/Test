@@ -1,6 +1,6 @@
 {
-  "FilesizeL": 500000,  // Niedrigere Größe
-  "FilesizeH": 5000000, // Niedrigere Größe
+  "FilesizeL": 2000000,
+  "FilesizeH": 25000000,
   "Astra": "2025/01/01:00:00:00", // Zukunftsdatum
   "Hydro": "2025/01/01:00:00:00|2025/01/01:00:00:00", // Zukunftsdatum
   "Leet": "2025/01/01:00:00:00", // Zukunftsdatum
