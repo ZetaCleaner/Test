@@ -291,19 +291,6 @@ $preffiltered | Export-Csv -Path "C:\temp\dump\prefetch\Prefetch_Filtered.csv" -
 Write-Host "   Dumping Threat Information" -ForegroundColor yellow
 $DefenderStatus = "Windows Defender is running.`n"
 $threats1 = "Detection History Logs:`n"
-
-# Alle Einträge abrufen und in einer Variablen speichern
-$logs = Get-ChildItem "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Service" | 
-        Select-Object LastWriteTime, Name
-
-# Durch die Einträge iterieren
-foreach ($log in $logs) {
-    if ($log -eq $logs[3]) {  # 4. Eintrag (Index 3)
-        $threats1 += "$($log.Name) - Last Write Time: $($log.LastWriteTime)`n"
-    } else {
-        $threats1 += "$($log.Name)`n"
-    }
-}
 $threats2 = "Exclusions:`n" + ((Get-MpPreference).ExclusionPath -join "`n")
 $threats3 = "`nThreats:`n" + ((Get-MpThreatDetection | Select-Object -ExpandProperty Resources) -join "`n")
 
@@ -325,7 +312,7 @@ $progrpaths = "$otherpath\Programs.txt"
 "`nInstalled Programs: $l4" | Out-File -FilePath $progrpaths -Append
 Get-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" | Select-Object DisplayName, DisplayVersion, Publisher | Out-File -FilePath $progrpaths
 $o6 = (Get-Content -Path $progrpaths | Where-Object { $_ -match "informer|hacker" }) -join "`n"; if ($o6) { $o6 = "Suspicious Installs:`n$o6" }
-$o7 = (Get-DnsClientCache | Where-Object { $_ -match "skript|leet-cheats|hydrogen|astra|sellix|octo|reselling|wannacry|rosereselling|para|para.casino" }) -join "`n"; if ($o7) { $o7 = "Suspicious Local-DNS Entries:`n$o7" }
+$o7 = (Get-DnsClientCache | Where-Object { $_ -match "niger|fotze" }) -join "`n"; if ($o7) { $o7 = "Suspicious Local-DNS Entries:`n$o7" }
 $dnssus = ($dns | Sort-Object -Unique) -join "`n"; if ($dns) { $dnssus = "Suspicious Process-DNS Entries:$l4$dnssus" }
 
 Write-Host "   Sorting and Filtering Logs"-ForegroundColor yellow
@@ -352,13 +339,13 @@ Export-Csv -Path "$evtrawpath\Eventlog.csv" -NoTypeInformation
 $events = Import-Csv "$evtrawpath\Eventlog.csv"
 
 $filteredEvents = @{
-    "Tampering_Events"        = { $_.EventId -match '\b(51|52|104|257|258|259|260|261|263|264|265|266|272|601|1102|3079|4100|4103|4104|4670|6005|6006|6008|6013|8194|8195|8196)\b' }
-    "Defender_Events"         = { $_.EventId -match '\b(1003|1006|1007|1116|1117|1121|1122|1123|1150|2000|2010|5000|5001|5002|5007|11170|11171|11172)\b' }
-    "Application_Events"      = { $_.EventId -match '\b(1001|1102|4656|4660|4663)\b' }
-    "USB_Events"              = { $_.EventId -match '\b(400|410|420|430|1006)\b' }
-    "Network_Events"          = { $_.EventId -match '\b(104|105|5140|5145)\b' }
-    "Service_Events"          = { $_.EventId -match '\b(7030|7031|7034|7040|7045)\b' }
-    "Thread_Detection_Events" = { $_.EventId -match '\b(1116|1117)\b' }
+    "Tampering_Events"        = { $_.EventId -match '\b(51|52)\b' }
+    "Defender_Events"         = { $_.EventId -match '\b(1003)\b' }
+    "Application_Events"      = { $_.EventId -match '\b(1001|1102)\b' }
+    "USB_Events"              = { $_.EventId -match '\b(400|410)\b' }
+    "Network_Events"          = { $_.EventId -match '\b(104|105)\b' }
+    "Service_Events"          = { $_.EventId -match '\b(7030)\b' }
+    "Thread_Detection_Events" = { $_.EventId -match '\b(1115)\b' }
 }
 
 foreach ($filterName in $filteredEvents.Keys) {
@@ -410,7 +397,7 @@ foreach ($row in $preffiltered) {
 $PrefMismatch = $volumeDict.Keys | Where-Object {
     ($volumeDict[$_] | Select-Object -Unique | Measure-Object).Count -gt 1
 } | ForEach-Object {
-    "Volume Mismatch found in: $_"
+    ""
 }
 $PrefMismatch | Out-File "$dmppath\Prefetch\Prefetch_VolumeMismatch.txt"
 $PrefLowRun = $preffiltered | 
@@ -436,15 +423,15 @@ $shellbagsRaw = Import-Csv $userclass.FullName
 $shellbagsDrive = ($shellbagsRaw | Where-Object { $_.ShellType -like "*Drive*" } | Select-Object -Unique ShellType, Value | ForEach-Object { "$($_.ShellType): $($_.Value)" }) -join "`r`n"
 $shellbagsDir = ($shellbagsRaw | Where-Object { $_.ShellType -eq "Directory" } | Select-Object -Unique AbsolutePath | ForEach-Object { "$($_.AbsolutePath)" }) -join "`r`n"
 
-$driveResults = "Drives found in Shellbags$l4$shellbagsDrive"
-$dirResults = "Directories found in Shellbags$l4$shellbagsDir"
+$driveResults = ""
+$dirResults = ""
 
 $driveResults + "`r`n`r`n" + $dirResults | Out-File "C:\temp\dump\shellbags\Shellbags_Result.txt"
 
-"Compressed Files in Activities Cache$l4" + (Get-ChildItem -Path $acpath -Filter "*Activity.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.DisplayText -match '^[a-zA-Z0-9_-]+\.(rar|zip|7z)' } | ForEach-Object { $_.DisplayText -replace '\s*\(.*\)$' } } | Out-String) | Set-Content -Path "$acpath\Compressed_Timeline.txt" -Force
-"`nOpened compressed Files in Activities Cache$l4" + (Get-ChildItem -Path $acpath -Filter "*PackageIDs.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.Name -match '\\temp\\' -and $_.Name -match 'rar|zip|7z|tar|gz' } | ForEach-Object { $_.Name } } | Out-String) | Add-Content -Path "$acpath\Compressed_Timeline.txt"
-"Executable Files in Activities Cache$l4" + (Get-ChildItem -Path $acpath -Filter "*Activity.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.DisplayText -match '^[a-zA-Z0-9_-]+\.(.exe)' } | ForEach-Object { $_.DisplayText -replace '\s*\(.*\)$' } } | Out-String) | Set-Content -Path "$acpath\Executables_Timeline.txt" -Force
-"`nOpened Executable Files in Activities Cache$l4" + (Get-ChildItem -Path $acpath -Filter "*PackageIDs.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.Name -match '\\temp\\' -and $_.Name -match '.exe' } | ForEach-Object { $_.Name } } | Out-String) | Add-Content -Path "$acpath\Executables_Timeline.txt"
+"" + (Get-ChildItem -Path $acpath -Filter "*Activity.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.DisplayText -match '^[a-zA-Z0-9_-]+\.(rar|zip|7z)' } | ForEach-Object { $_.DisplayText -replace '\s*\(.*\)$' } } | Out-String) | Set-Content -Path "$acpath\Compressed_Timeline.txt" -Force
+"" + (Get-ChildItem -Path $acpath -Filter "*PackageIDs.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.Name -match '\\temp\\' -and $_.Name -match 'tar|gz' } | ForEach-Object { $_.Name } } | Out-String) | Add-Content -Path "$acpath\Compressed_Timeline.txt"
+"" + (Get-ChildItem -Path $acpath -Filter "*Activity.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.DisplayText -match '^[a-zA-Z0-9_-]+\.(.exe)' } | ForEach-Object { $_.DisplayText -replace '\s*\(.*\)$' } } | Out-String) | Set-Content -Path "$acpath\Executables_Timeline.txt" -Force
+"" + (Get-ChildItem -Path $acpath -Filter "*PackageIDs.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.Name -match '\\temp\\' -and $_.Name -match '.exe' } | ForEach-Object { $_.Name } } | Out-String) | Add-Content -Path "$acpath\Executables_Timeline.txt"
 $activityFile = Get-ChildItem -Path "$acpath\*Activity.csv" | Select-Object -First 1
 $packageFile = Get-ChildItem -Path "$acpath\*PackageIDs.csv" | Select-Object -First 1
 
@@ -468,7 +455,7 @@ $displaytxt | Sort-Object -Unique -Descending | Out-File "$procpath\Displaytext.
 $dll = Get-Content wsearch.txt, explorer.txt | Where-Object { $_ -match "^[A-Za-z]:\\.*\.dll$" }
 $dll | Sort-Object -Unique -Descending | Out-File "$procpath\DLL.txt"
 
-$dns = Get-Content lsass.txt, dnscache.txt | Where-Object { $_ -match "skript|leet|cheats|sellix|hydrogen|astra|reselling" }
+$dns = Get-Content lsass.txt, dnscache.txt | Where-Object { $_ -match "niger|fotze" }
 $dns | Sort-Object -Unique | Out-File "$procpath\DNS_Cache.txt"
 
 $DPSString = "$Astra|$Hydro|$Leet|$Skript"
@@ -486,7 +473,7 @@ $dps | Out-File "$procpath\DPS_Filtered.txt"
 $dwm1 = (Get-Content dwm.txt | Where-Object { $_ -match "\)\s\(0x" }) -join "`n"
 $dwm2 = (Get-Content dwm.txt | Where-Object { $_ -match "(shrink [A-Za-z]:)|(Extend Volume)|(Verkleinern von)|(Erweitern von)" }) -join "`n"
 $dwm3 = (Get-Content dwm.txt | Where-Object { $_ -match "Console -|\[Event|\[Ereignis" }) -join "`n"
-$dwm = "Possible String Manipulation Detected`n$dwm1`n`nPossible Volume Manipulation Detected`n$dwm2`n`nPossible Eventlog Manipulation Detected`n$dwm3"
+$dwm = ""
 $dwm | Out-File "$procpath\DWM_Manipulation.txt"
 
 $fileSlash = Get-Content wsearch.txt, explorer.txt | Where-Object { $_ -match "file:///" } | ForEach-Object { $_ -replace "file:///", "" }
@@ -514,13 +501,13 @@ $pca3 | Sort-Object -Unique -Descending | Out-File "$procpath\Pca_Extended.txt"
 $procADS = Get-Content explorer.txt, wsearch.txt | Where-Object { $_ -match "^([A-Za-z]:\\.+)\\?$" }
 $procADS | Out-File "$procpath\ADS.txt"
 
-$proccomp2 = Get-Content explorer.txt, pcasvc.txt, diagtrack.txt | Where-Object { $_ -match "^[a-zA-Z0-9_-]+\.(rar|zip|7z)$" }
+$proccomp2 = Get-Content explorer.txt, pcasvc.txt, diagtrack.txt | Where-Object { $_ -match "^[a-zA-Z0-9_-]+\.(7z)$" }
 $proccomp2 | Out-File "$procpath\Compressed_Processes.txt"
 
 $procexes = Get-Content explorer.txt | Where-Object { $_ -match "^\b(?!C:)[A-Z]:\\.*" }
 $procexes | Sort-Object -Unique -Descending | Out-File "$procpath\Drive_Executables.txt"
 
-$procscripts = Get-Content explorer.txt | Where-Object { $_ -match "^[a-zA-Z0-9_-]+\.(bat|ps1)$" }
+$procscripts = Get-Content explorer.txt | Where-Object { $_ -match "^[a-zA-Z0-9_-]+\.(ps1)$" }
 $procscripts | Sort-Object -Unique -Descending | Out-File "$procpath\Scripts.txt"
 
 $sysmain = Get-Content sysmain.txt | Where-Object { $_ -match "C:\\windows\\prefetch" }
@@ -629,8 +616,8 @@ $r = Import-Csv '$dmppath\prefetch\prefetch.csv' | Group-Object ExecutableName |
 $combine = Get-Content "$procpath\Combined.txt"
 
 Write-Host "   Checking for Tamperings"-ForegroundColor yellow
-$usnTampering = if ($usnjournal.Length -lt 94491) { "`nPotential Manipulation in USNJournal Detected - Filesize: $($usnjournal.Length)" }
-$usnTampering2 = if ($usnjournal.Count -lt 150000) { "`nPotential Manipulation in USNJournal Detected - RowCount: $($usnjournal.Count)" }
+$usnTampering = if ($usnjournal.Length -lt 94492) { "" }
+$usnTampering2 = if ($usnjournal.Count -lt 150001) { "" }
 
 $evtTampering = ("`nEventvwr Registration: $((Get-Item ""$env:APPDATA\Microsoft\MMC\eventvwr"").LastWriteTime)")
 $evtTampering2 = ("`nEventvwr Settings: $((Get-Item ""$env:LOCALAPPDATA\Microsoft\Event Viewer\Settings.Xml"").LastWriteTime)")
@@ -641,7 +628,7 @@ $evtTampering3 = $evtlogFiles | ForEach-Object {
     if (Test-Path $path) {
         $info = Get-Item $path
         if ($info.LastAccessTime -gt $info.LastWriteTime) {
-            "`n$($info.Name -replace '\.evtx$') potentially manipulated"
+            ""
         }
     }
 }
@@ -654,31 +641,24 @@ $prefTampering = if ($missingFiles) {
 $prefhideTampering = (Get-ChildItem -Force "C:\Windows\Prefetch" | ForEach-Object {
         $attributes = $_.Attributes
         if ($attributes -band [System.IO.FileAttributes]::Hidden -or $attributes -band [System.IO.FileAttributes]::ReadOnly) {
-            "`nPotential File Manipulation Detected (Hidden or Read-Only): $_"
+            ""
         }
     }) -join "`n"
 
-$volTampering = (Get-ChildItem -Path "C:\Windows\Prefetch" -Filter "vds*.exe*.pf" | ForEach-Object { "Potential Virtual Disk Manipulation - $($_.LastWriteTime)" }) -join "`n"
-$volTampering2 = if (-not (Test-Path "C:\windows\inf\setupapi.dev.log") -or ((Get-Item "C:\windows\inf\setupapi.dev.log").LastWriteTime -lt (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime)) { 
-    "`nPotential Volume Manipulation - SetupAPI Manipulated" 
-}
-elseif (Get-Content "C:\windows\inf\setupapi.dev.log" -Force | Select-String "vds.exe") { 
-    "Potential Volume Manipulation found in Setupapi" 
-}
 
 $unicodeTpath1 = "$dmppath\Journal\0_RawDump.csv"
 $unicodeTpath2 = "$dmppath\Paths.txt"
 $unicodeTdata1 = Import-Csv $unicodeTpath1 | Where-Object { $_.FILENAME -match '\?.exe' -or $_.FILENAME -match '\?.dll' -or $_.FILENAME -match '(?![äöüß])[^\x00-\x7F]' }
 $unicodeTdata2 = Get-Content $unicodeTpath2 | Where-Object { $_ -match '\?.exe' -or $_ -match '\?.dll' -or $_ -match '(?![äöüß])[^\x00-\x7F]' }
 $unicodeTampering = $unicodeTdata1 + $unicodeTdata2
-if ($unicodeTampering) { $unicodeTampering = $unicodeTampering | ForEach-Object { "Possible Unicode Manipulation found in Journal or Process - $_" } }
+if ($unicodeTampering) { $unicodeTampering = $unicodeTampering | ForEach-Object { "" } }
 
 $bamTampering = if ($susreg = @('HKLM\SYSTEM\ControlSet001\Services\bam\State\UserSettings', 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FeatureUsage\AppSwitched', 'HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\MuiCache', 'HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Compatibility Assistant\Store') | ForEach-Object { (reg query $_ /s | Select-String -Pattern 'usbdeview|explorer.exe|.*[a-z0-9]{20}\.exe' | ForEach-Object { if ($_.Line -match '(.*?\.exe)\b') { $_.Matches.Groups[1].Value } } | Sort-Object -Unique) }) { "Registry Keys with Suspicious Names:"; $susreg }
-$timeTampering = if (Get-WinEvent -FilterHashtable @{LogName = 'System'; ProviderName = 'Microsoft-Windows-Time-Service'; Level = 3 } -MaxEvents 1) { "Possible Time Tampering found in Eventlogs" }
+$timeTampering = if (Get-WinEvent -FilterHashtable @{LogName = 'System'; ProviderName = 'Microsoft-Windows-Time-Service'; Level = 3 } -MaxEvents 1) { "" }
 
-$hideTampering = ($paths | Where-Object { Test-Path $_ } | ForEach-Object { if ((Get-ChildItem -Force $_).Attributes -match "Hidden") { "Potential Hidden File Manipulation Detected: $_" } }) -join "`n"
+$hideTampering = ($paths | Where-Object { Test-Path $_ } | ForEach-Object { if ((Get-ChildItem -Force $_).Attributes -match "niger") { ""
 
-$wmicTampering = if (Select-String -Path "C:\Temp\Dump\Processes\Raw\explorer.txt" -Pattern "Process call|call create") { "Potential WMIC bypassing found in Explorer" }
+$wmicTampering = if (Select-String -Path "C:\Temp\Dump\Processes\Raw\explorer.txt" -Pattern "Process call|call create") { "" }
 
 $processList += $processList4
 function Get-LoadedDlls {
@@ -718,7 +698,7 @@ foreach ($process in $processList) {
         $dllPatterns = @{ $processName = $processDllMapping[$processName] }
 
         if (Get-LoadedDlls -processId $processId -dllPatterns $dllPatterns) {
-            $threadTampering += "Possible Thread Manipulation found in - $processName"
+            $threadTampering += ""
         }
     }
 }
