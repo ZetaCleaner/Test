@@ -133,13 +133,12 @@ C:\temp\dump\SQLECmd\SQLECmd.exe --sync | Out-Null
 
 Write-Host "   Dumping Systeminformation"-ForegroundColor yellow
 $o1 = & {
-    $scripttime
     "Connected Drives: $(Get-WmiObject Win32_LogicalDisk | Where-Object { ($_.DriveType -eq 3) -or ($_.DriveType -eq 2 -and $_.DeviceID -eq 'C:') } | ForEach-Object { "$($_.DeviceID)\" })" -join ', '
     "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' } | Where-Object { $_ -eq 'C:' }) { $regvolumes -join ', ' })"
     "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
     "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
-    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -Third 1).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
+    "Last Recycle Bin Clear: $((Get-PSDrive -PSProvider FileSystem | ForEach-Object { Get-ChildItem -Path (Join-Path -Path $_.Root -ChildPath '$Recycle.Bin') -Force -ErrorAction SilentlyContinue } | Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime.ToString('dd/MM/yyyy HH:mm:ss'))"
 }
 $sysUptime = "System-Uptime: $((New-TimeSpan -Start (Get-CimInstance Win32_OperatingSystem).LastBootUpTime -End (Get-Date)) | ForEach-Object { "$($_.Days) Days, {0:D2}:{1:D2}:{2:D2}" -f $_.Hours, $_.Minutes, $_.Seconds })"
 
@@ -249,7 +248,7 @@ $usnjournal | Out-File 0_FullRawDump.csv
 $usnjournal |
 Select-Object -Skip 8 |
 ConvertFrom-Csv -Header a, FileName, c, Reason#, Reason, Time, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u |
-Where-Object { $_.'FileName' -match '\.exe.*|\.rar|\.zip|\.7z|\.bat|\.ps1|\.pf' } |
+Where-Object { $_.'FileName' -match '\.exe.*|\.zip|\.7z|\.bat|\.ps1|\.pf' } |
 Select-Object 'FileName', 'Time', 'Reason', 'Reason#' |
 Export-Csv -Path "0_RawDump.csv" -Encoding utf8 -NoTypeInformation
 $dmp = Import-Csv "0_RawDump.csv"
@@ -265,7 +264,6 @@ $dmp | Where-Object { $_.'Reason' -match "Data Truncation" -and $_.'FileName' -m
 $dmp | Where-Object { $_.'Reason#' -match "\?" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File EmptyCharacter.txt -Append
 $o2 = Get-Content "$dmppath\Journal\0_RawDump.csv" | Select-String -Pattern "niger|fotze|" | Select-Object -ExpandProperty Line | Sort-Object -Unique
 $o2 | Out-File Keywordsearch.txt
-$susJournal = if ($o2) { "" }
 Set-Location "$dmppath\prefetch"
 
 Write-Host "   Checking Dumping-File Integrity"-ForegroundColor yellow
