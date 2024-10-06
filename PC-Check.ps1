@@ -738,10 +738,10 @@ $Tamperings = @(
 )
 
 Write-Host "   Outputting and Finishing"-ForegroundColor yellow
-$t1 = "`nSuspicious Files on System `r$l3"
-$t2 = "`nSuspicious Files in Instance `r$l3"
-$t3 = "`nProcess Uptime `r$l3"
-$t4 = "`nDeleted Files `r$l3"
+$t1 = ""
+$t2 = ""
+$t3 = ""
+$t4 = ""
 
 $regRenames = Get-ChildItem -Path "$dmppath\Registry" -Filter "*.csv" -Recurse
 foreach ($file in $regRenames) {
@@ -765,18 +765,18 @@ cd\
 Clear-Host
 
 $cheats1 = if ($dps4 -match "($Skript|$Hydro|$Astra|$Leet)") {
-    "Severe Traces of Cheats found in Instance"
+    ""
 }
 
 $cheats2 = if ($threats2 -match $ThreatDetection -or $threats5 -match $ThreatDetection) {
-    "Severe Traces of Cheats found in Threat-Protection"
+    ""
 }
 
 $cheats3 = $null
 $peRows = $peHeaders | Where-Object { $_.EntryPoint -match $entryPoint }
 if ($peRows) {
     foreach ($row in $peRows) {
-        $cheats3 += "Cheat Execution found in $($row.FilePath)`n"
+        $cheats3 += ""
     }
 }
 
