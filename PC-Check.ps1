@@ -656,7 +656,7 @@ if ($unicodeTampering) { $unicodeTampering = $unicodeTampering | ForEach-Object 
 $bamTampering = if ($susreg = @('HKLM\SYSTEM\ControlSet001\Services\bam\State\UserSettings', 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FeatureUsage\AppSwitched', 'HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\MuiCache', 'HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Compatibility Assistant\Store') | ForEach-Object { (reg query $_ /s | Select-String -Pattern 'usbdeview|explorer.exe|.*[a-z0-9]{20}\.exe' | ForEach-Object { if ($_.Line -match '(.*?\.exe)\b') { $_.Matches.Groups[1].Value } } | Sort-Object -Unique) }) { "Registry Keys with Suspicious Names:"; $susreg }
 $timeTampering = if (Get-WinEvent -FilterHashtable @{LogName = 'System'; ProviderName = 'Microsoft-Windows-Time-Service'; Level = 3 } -MaxEvents 1) { "" }
 
-$hideTampering = ($paths | Where-Object { Test-Path $_ } | ForEach-Object { if ((Get-ChildItem -Force $_).Attributes -match "niger") { ""
+$hideTampering = ($paths | Where-Object { Test-Path $_ } | ForEach-Object { if ((Get-ChildItem -Force $_).Attributes -match "Hidden") { "" } }) -join "`n"
 
 $wmicTampering = if (Select-String -Path "C:\Temp\Dump\Processes\Raw\explorer.txt" -Pattern "Process call|call create") { "" }
 
