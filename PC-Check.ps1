@@ -561,6 +561,7 @@ if ($allDeletedEntries.Count -gt 10) {
 $allDeletedEntries | Set-Content $deletedFilePath
 
 $filesizeFound | Out-File "$dmppath\Filesize.txt"
+$filesFound | Out-File "$dmppath\deletedFile.txt"
 
 
 
@@ -815,7 +816,7 @@ $cheats1
 $cheats2
 $cheats3
 
-@($cheats1; $cheats2; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $threats1; $threats2; $threats3; $h4; $eventResults; $h5; $t1; $combine; $t2; $dps1; $r; $t4; $deletedFilePath) | Add-Content c:\temp\Results.txt
+@($cheats1; $cheats2; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $threats1; $threats2; $threats3; $h4; $eventResults; $h5; $t1; $combine; $t2; $dps1; $r; $t4; $filesFound) | Add-Content c:\temp\Results.txt
 
 
 Write-Host "Done! Results are in C:\Temp"
