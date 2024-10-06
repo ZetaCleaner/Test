@@ -55,7 +55,7 @@ $h5 = & { $l1; "|   Executables   |"; $l2; }
 Clear-Host
 if ((Read-Host "`n`n`nThis program requires 1GB of free disk space on your System Disk.`n`n`nWe will be downloading the programs: `n`n- ESEDatabaseView by Nirsoft `n- strings2 by Geoff McDonald (more infos at split-code.com) `n- ACC Parser, PECmd, EvtxCmd, SBECmd, SQLECmd, RECmd and WxTCmd from Eric Zimmermans Tools (more infos at ericzimmerman.github.io).`n`nThis will be fully local, no data will be collected.`nIf Traces of Cheats are found, you are highly advised to reset your PC or you could face repercussions on other Servers.`nRunning PC Checking Programs, including this script, outside of PC Checks may have impact on the outcome.`nDo you agree to a PC Check and do you agree to download said tools? (Y/N)") -eq "Y") {
     Clear-Host
-    Write-Host "`n`n`n-------------------------"-ForegroundColor green
+    Write-Host "`n`n`n-------------------------"-ForegroundColor purple
     Write-Host "|    Download Assets    |" -ForegroundColor red
     Write-Host "|      Please Wait      |" -ForegroundColor red
     Write-Host "-------------------------`n"-ForegroundColor red
@@ -528,6 +528,17 @@ $paths = Get-Content $dmppath\Paths.txt
 
 $filesizeFound = @()
 $noFilesFound = @()
+
+$deletedFilePath = "$dmppath\Deletedfile.txt"
+if (Test-Path $deletedFilePath) {
+    $previousEntries = Get-Content $deletedFilePath
+    if ($previousEntries.Count -gt 10) {
+        $previousEntries = $previousEntries[-10..-1]
+    }
+} else {
+    $previousEntries = @()
+}
+
 Get-Content "$dmppath\Paths.txt" | ForEach-Object {
     $fPa = $_
     if (Test-Path $fPa) {
@@ -540,8 +551,19 @@ Get-Content "$dmppath\Paths.txt" | ForEach-Object {
         $noFilesFound += "File Deleted: $fPa"
     }
 }
+
+$allDeletedEntries = @($previousEntries) + $noFilesFound
+
+if ($allDeletedEntries.Count -gt 10) {
+    $allDeletedEntries = $allDeletedEntries[-10..-1]
+}
+
+$allDeletedEntries | Set-Content $deletedFilePath
+
 $filesizeFound | Out-File "$dmppath\Filesize.txt"
-$noFilesFound | Out-File "$dmppath\Deletedfile.txt"
+
+
+
 
 $programPaths = "C:\temp\dump\Unsigned.txt"
 $peOutput = "C:\temp\dump\PE_Headers.csv"
@@ -603,11 +625,22 @@ $peHeaders = foreach ($filePath in $filePaths) {
 $peHeaders | Export-Csv -Path $peOutput -NoTypeInformation
 $peHeaders | Where-Object { -not $_.DebugDirectoryRVA -or $_.DebugDirectoryRVA -eq "0x0" } | ForEach-Object { $_.FilePath } | Set-Content -Path "$dmppath\Debug.txt"
 
-Get-Content "$dmppath\Paths.txt" | ForEach-Object { if (Test-Path $_) { $signature = Get-AuthenticodeSignature -FilePath $_; if ($signature.Status -ne 'Valid') { $_ } } } | Out-File "$dmppath\Unsigned.txt"
+$unsignedPaths = Get-Content "$dmppath\Unsigned.txt"
+$debugPaths = Get-Content "$dmppath\Debug.txt"
+$filesizePaths = Get-Content "$dmppath\Filesize.txt"
 
-(Get-Content "$dmppath\Dps.txt" | Where-Object { $_ -match '!!(.*?)!$' } | Sort-Object -Unique) | Set-Content "$dmppath\Dps.txt"
+$commonPaths = $unsignedPaths | Where-Object {
+    ($_ -in $debugPaths) -and ($_ -in $filesizePaths)
+}
 
-Get-Content "$dmppath\Unsigned.txt" | ForEach-Object { $_ | Where-Object { ($_ -in (Get-Content "$dmppath\Debug.txt")) -and ($_ -in (Get-Content "$dmppath\Filesize.txt")) } } | Set-Content "$procpath\Combined.txt"
+$updatedUnsignedPaths = $unsignedPaths | Where-Object { -not ($_ -in $commonPaths) }
+$updatedDebugPaths = $debugPaths | Where-Object { -not ($_ -in $commonPaths) }
+$updatedFilesizePaths = $filesizePaths | Where-Object { -not ($_ -in $commonPaths) }
+
+$updatedUnsignedPaths | Set-Content "$dmppath\Unsigned.txt"
+$updatedDebugPaths | Set-Content "$dmppath\Debug.txt"
+$updatedFilesizePaths | Set-Content "$dmppath\Filesize.txt"
+
 
 $r = Import-Csv '$dmppath\prefetch\prefetch.csv' | Group-Object ExecutableName | ForEach-Object { $g = $_; $u = $g.Group | Select-Object -u Volume0Name; if ($u.Count -eq 0) { $g.Group | Select-Object ExecutableName, Volume0Name, LastRun } } | Format-Table -AutoSize -HideTableHeaders | Sort-Object -Unique | Out-String; if ($r -ne "") { $r | Out-File '$dmppath\Prefetch\Prefetch_Sus.txt' }
 
@@ -782,7 +815,7 @@ $cheats1
 $cheats2
 $cheats3
 
-@($cheats1; $cheats2; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $threats1; $threats2; $threats3; $h4; $eventResults; $h5; $t1; $combine; $t2; $dps1; $r; $t4; $noFilesFound) | Add-Content c:\temp\Results.txt
+@($cheats1; $cheats2; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $threats1; $threats2; $threats3; $h4; $eventResults; $h5; $t1; $combine; $t2; $dps1; $r; $t4; $deletedFilePath) | Add-Content c:\temp\Results.txt
 
 
 Write-Host "Done! Results are in C:\Temp"
