@@ -540,9 +540,6 @@ Get-Content "$dmppath\Paths.txt" | ForEach-Object {
         $noFilesFound += "File Deleted: $fPa"
     }
 }
-if ($noFilesFound.Count -gt 10) {
-    $noFilesFound = $noFilesFound[0..($noFilesFound.Count - 11)]
-}
 $filesizeFound | Out-File "$dmppath\Filesize.txt"
 $noFilesFound | Out-File "$dmppath\Deletedfile.txt"
 
@@ -612,7 +609,7 @@ Get-Content "$dmppath\Paths.txt" | ForEach-Object { if (Test-Path $_) { $signatu
 
 Get-Content "$dmppath\Unsigned.txt" | ForEach-Object { $_ | Where-Object { ($_ -in (Get-Content "$dmppath\Debug.txt")) -and ($_ -in (Get-Content "$dmppath\Filesize.txt")) } } | Set-Content "$procpath\Combined.txt"
 
-$r = Import-Csv '$dmppath\prefetch\prefetch.csv' | Group-Object ExecutableName | ForEach-Object { $g = $_; $u = $g.Group | Select-Object -u Volume0Name; if ($u.Count -eq 1) { $g.Group | Select-Object ExecutableName, Volume0Name, LastRun } } | Format-Table -AutoSize -HideTableHeaders | Sort-Object -Unique | Out-String; if ($r -ne "") { $r | Out-File '$dmppath\Prefetch\Prefetch_Sus.txt' }
+$r = Import-Csv '$dmppath\prefetch\prefetch.csv' | Group-Object ExecutableName | ForEach-Object { $g = $_; $u = $g.Group | Select-Object -u Volume0Name; if ($u.Count -eq 0) { $g.Group | Select-Object ExecutableName, Volume0Name, LastRun } } | Format-Table -AutoSize -HideTableHeaders | Sort-Object -Unique | Out-String; if ($r -ne "") { $r | Out-File '$dmppath\Prefetch\Prefetch_Sus.txt' }
 
 $combine = Get-Content "$procpath\Combined.txt"
 
