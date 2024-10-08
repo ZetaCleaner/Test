@@ -36,6 +36,7 @@ $regpath = "C:\Temp\Dump\Registry"
 $shellbagspath = "C:\Temp\Dump\Shellbags"
 $shimcachepath = "C:\Temp\Dump\Shimcache"
 $winsearchpath = "C:\Temp\Dump\Winsearch"
+$scripttime = "Script-Run-Time: $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
 $directories = @('Timeline', 'Events\Raw', 'Journal', 'Others', 'Prefetch', 'Processes\Filtered', 'Processes\Raw', 'Registry', 'Shellbags', 'Shimcache', 'Winsearch')
 foreach ($dir in $directories) {
     New-Item -Path "$dmppath\$dir" -ItemType Directory -Force | Out-Null
@@ -119,9 +120,9 @@ Write-Host "  This takes 5 Minutes`n`n`n"-ForegroundColor yellow
 Write-Host "   Dumping System Logs"-ForegroundColor yellow
 Start-Process -FilePath "C:\temp\dump\PECmd.exe" -ArgumentList '-d "C:\Windows\Prefetch" --vss --csv C:\temp\dump\Prefetch --csvf Prefetch.csv' -WindowStyle Hidden
 Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Application.evtx" --inc 1000,1002 --csv "C:\temp\dump\Events\Raw" --csvf Application.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Security.evtx" --inc 4624,4625, 4626 --csv "C:\temp\dump\Events\Raw" --csvf Security.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\System.evtx" --inc 6008 --csv "C:\temp\dump\Events\Raw" --csvf System.csv' -WindowStyle Hidden
-Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-PowerShell%4Operational.evtx" --inc 1000 --csv "C:\temp\dump\Events\Raw" --csvf Powershell.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Security.evtx" --inc 4624,4625,4626 --csv "C:\temp\dump\Events\Raw" --csvf Security.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\System.evtx" --inc 7040 --csv "C:\temp\dump\Events\Raw" --csvf System.csv' -WindowStyle Hidden
+Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-PowerShell%4Operational.evtx" --inc 6013,266,257 --csv "C:\temp\dump\Events\Raw" --csvf Powershell.csv' -WindowStyle Hidden
 Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Kernel-PnP%4Configuration.evtx" --inc 431 --csv "C:\temp\dump\Events\Raw" --csvf KernelPnp.csv' -WindowStyle Hidden
 Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Windows Defender%4Operational.evtx" --inc 5010,5011 --csv "C:\temp\dump\Events\Raw" --csvf Defender.csv' -WindowStyle Hidden
 Start-Process -FilePath "C:\temp\dump\EvtxECmd\EvtxECmd.exe" -ArgumentList '-f "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Time-Service%4Operational.evtx" --inc 258 --csv "C:\temp\dump\Events\Raw" --csvf Timeservice.csv' -WindowStyle Hidden
@@ -133,8 +134,9 @@ C:\temp\dump\SQLECmd\SQLECmd.exe --sync | Out-Null
 
 Write-Host "   Dumping Systeminformation"-ForegroundColor yellow
 $o1 = & {
+    $scripttime
     "Connected Drives: $(Get-WmiObject Win32_LogicalDisk | Where-Object { ($_.DriveType -eq 3) -or ($_.DriveType -eq 2 -and $_.DeviceID -eq 'C:') } | ForEach-Object { "$($_.DeviceID)\" })" -join ', '
-    "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' } | Where-Object { $_ -eq 'C:' }) { $regvolumes -join ', ' })"
+    "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' } | Where-Object { $_ -eq 'C:', 'D:' }) { $regvolumes -join ', ' })"
     "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
     "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
@@ -272,7 +274,7 @@ $missing = $files | Where-Object { -not (Test-Path $_) }
 
 $prefpath = "C:\temp\dump\prefetch\prefetch.csv"
 $prefcol = "ExecutableName", "SourceCreated", "SourceModified", "LastRun", "RunCount", "Hash", "PreviousRun0", "PreviousRun1", "PreviousRun2", "PreviousRun3", "PreviousRun4", "PreviousRun5", "PreviousRun6", "Volume0Serial", "FilesLoaded"
-$prefkey = "*Anydesk*", "*Brave*", "*Chrome*", "*CODE*", "*Conhost*", "*Consent*", "*Discord*", "*DLLHost*", "*Firefox*", "*Openwith*", "*Opera*", "*REGSVR32*", "rundll32", "Smartscreen", "*systeminformer*", "*Winrar*", "*WMIC*", "*VSSVC*"
+$prefkey = "*Anydesk*", "*Brave*", "*Chrome*", "*CODE*", "*Conhost*", "*Consent*", "*Discord*", "*DLLHost*", "*Firefox*", "*Openwith*", "*Opera*", "*REGSVR32*", "rundll32", "Smartscreen", "*Winrar*"
 $preffilter = Import-Csv -Path $prefpath
 $preffiltered = $preffilter | Where-Object {
     $prefmatch = $false
@@ -289,8 +291,8 @@ $preffiltered | Export-Csv -Path "C:\temp\dump\prefetch\Prefetch_Filtered.csv" -
 Write-Host "   Dumping Threat Information" -ForegroundColor yellow
 $DefenderStatus = "Windows Defender is running.`n"
 $threats1 = "Detection History Logs:`n"
-$threats2 = "Exclusions:`n" + ((Get-MpPreference).ExclusionPath -join "`n")
-$threats3 = "`nThreats:`n" + ((Get-MpThreatDetection | Select-Object -ExpandProperty Resources) -join "`n")
+$threats2 = "Exclusions:`n"
+$threats3 = "`nThreats:`n" 
 
 Write-Host "   Dumping WinsearchDB"-ForegroundColor yellow
 Stop-Service wsearch -Force
@@ -309,7 +311,7 @@ Get-WmiObject -class Win32_Share | Out-File -FilePath "$otherpath\SharedFolders.
 $progrpaths = "$otherpath\Programs.txt"
 "`nInstalled Programs: $l4" | Out-File -FilePath $progrpaths -Append
 Get-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" | Select-Object DisplayName, DisplayVersion, Publisher | Out-File -FilePath $progrpaths
-$o6 = (Get-Content -Path $progrpaths | Where-Object { $_ -match "informer|hacker" }) -join "`n"; if ($o6) { $o6 = "Suspicious Installs:`n$o6" }
+$o6 = (Get-Content -Path $progrpaths | Where-Object { $_ -match "niger|fotze" }) -join "`n"; if ($o6) { $o6 = "Suspicious Installs:`n$o6" }
 $o7 = (Get-DnsClientCache | Where-Object { $_ -match "niger|fotze" }) -join "`n"; if ($o7) { $o7 = "Suspicious Local-DNS Entries:`n$o7" }
 $dnssus = ($dns | Sort-Object -Unique) -join "`n"; if ($dns) { $dnssus = "Suspicious Process-DNS Entries:$l4$dnssus" }
 
@@ -540,23 +542,18 @@ if (Test-Path $deletedFilePath) {
 }
 
 Get-Content "$dmppath\Paths.txt" | ForEach-Object {
-    $fPa = $_
-    if (Test-Path $fPa) {
-        $fSi = (Get-Item $fPa).Length
-        if ($fSi -ge ($filesizeL) -and $fSi -le ($filesizeH)) {
+ if ($fPa -ne 'C:\ProgramData\Epic\EpicGamesLauncher\InstaIIChainner.exe') {
+        if (Test-Path $fPa) {
+            $fSi = (Get-Item $fPa).Length
             $filesizeFound += $fPa
         }
-    }
-    else {
-        $noFilesFound += "File Deleted: $fPa"
+        else {
+            $noFilesFound += "File Deleted: $fPa"
+        }
     }
 }
 
 $allDeletedEntries = @($previousEntries) + $noFilesFound
-
-if ($allDeletedEntries.Count -gt 10) {
-    $allDeletedEntries = $allDeletedEntries[-10..-1]
-}
 
 $allDeletedEntries | Set-Content $deletedFilePath
 
@@ -665,14 +662,14 @@ $evtTampering3 = $evtlogFiles | ForEach-Object {
     }
 }
 
-$filesToCheck = @("Discord.exe", "VSSVC.exe", "reg.exe", "cmd.exe", "MpCmdRun.exe", "msedge.exe")
+$filesToCheck = @("Discord.exe")
 $missingFiles = $filesToCheck | Where-Object { -not ($preffiltered.executablename -contains $_) }
 $prefTampering = if ($missingFiles) { 
     "`nPotential Manipulation in Prefetch Detected - Missing Files: $($missingFiles -join ', ')"
 }
 $prefhideTampering = (Get-ChildItem -Force "C:\Windows\Prefetch" | ForEach-Object {
         $attributes = $_.Attributes
-        if ($attributes -band [System.IO.FileAttributes]::Hidden -or $attributes -band [System.IO.FileAttributes]::ReadOnly) {
+        if ($attributes -band [System.IO.FileAttributes]::ReadOnly) {
             ""
         }
     }) -join "`n"
@@ -688,7 +685,7 @@ if ($unicodeTampering) { $unicodeTampering = $unicodeTampering | ForEach-Object 
 $bamTampering = if ($susreg = @('HKLM\SYSTEM\ControlSet001\Services\bam\State\UserSettings', 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FeatureUsage\AppSwitched', 'HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\MuiCache', 'HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Compatibility Assistant\Store') | ForEach-Object { (reg query $_ /s | Select-String -Pattern 'usbdeview|explorer.exe|.*[a-z0-9]{20}\.exe' | ForEach-Object { if ($_.Line -match '(.*?\.exe)\b') { $_.Matches.Groups[1].Value } } | Sort-Object -Unique) }) { "Registry Keys with Suspicious Names:"; $susreg }
 $timeTampering = if (Get-WinEvent -FilterHashtable @{LogName = 'System'; ProviderName = 'Microsoft-Windows-Time-Service'; Level = 3 } -MaxEvents 1) { "" }
 
-$hideTampering = ($paths | Where-Object { Test-Path $_ } | ForEach-Object { if ((Get-ChildItem -Force $_).Attributes -match "Hidden") { "" } }) -join "`n"
+$hideTampering = ($paths | Where-Object { Test-Path $_ } | ForEach-Object { if ((Get-ChildItem -Force $_).Attributes -match "niger") { "" } }) -join "`n"
 
 $wmicTampering = if (Select-String -Path "C:\Temp\Dump\Processes\Raw\explorer.txt" -Pattern "Process call|call create") { "" }
 
@@ -796,7 +793,7 @@ Set-Clipboard -Value $null
 cd\
 Clear-Host
 
-$cheats1 = if ($dps4 -match "($Skript|$Hydro|$Astra|$Leet)") {
+$cheats1 = if ($dps4 -match "($Hydro|$Astra)") {
     ""
 }
 
