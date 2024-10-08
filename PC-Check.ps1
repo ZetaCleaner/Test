@@ -136,7 +136,7 @@ Write-Host "   Dumping Systeminformation"-ForegroundColor yellow
 $o1 = & {
     $scripttime
     "Connected Drives: $(Get-WmiObject Win32_LogicalDisk | Where-Object { ($_.DriveType -eq 3) -or ($_.DriveType -eq 2 -and $_.DeviceID -eq 'C:') } | ForEach-Object { "$($_.DeviceID)\" })" -join ', '
-    "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' } | Where-Object { $_ -eq 'C:', 'D:' }) { $regvolumes -join ', ' })"
+    "Volumes in Registry: $(if ($regvolumes = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows Search\VolumeInfoCache' | ForEach-Object { $_ -replace '^.*\\([^\\]+)$', '$1' } | Where-Object { $_ -eq 'C:' -or $_ -eq 'D:' }) { $regvolumes -join ', ' })"
     "Windows Version: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).ProductName), $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName, CurrentBuild).CurrentBuild)"
     "Windows Installation: $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem).InstallDate).ToString('dd/MM/yyyy'))"
     "Last Boot up Time: $((Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Get-Date -Format 'dd/MM/yyyy HH:mm:ss')" 
@@ -532,33 +532,48 @@ $filesizeFound = @()
 $noFilesFound = @()
 
 $deletedFilePath = "$dmppath\Deletedfile.txt"
+$excludedPath = 'C:\ProgramData\Epic\EpicGamesLauncher\InstaIIChainner.exe'
+
 if (Test-Path $deletedFilePath) {
     $previousEntries = Get-Content $deletedFilePath
-    if ($previousEntries.Count -gt 10) {
-        $previousEntries = $previousEntries[-10..-1]
-    }
 } else {
     $previousEntries = @()
 }
 
 Get-Content "$dmppath\Paths.txt" | ForEach-Object {
- if ($fPa -ne 'C:\ProgramData\Epic\EpicGamesLauncher\InstaIIChainner.exe') {
+    $fPa = $_  
+
+
+    if ($fPa -ne $excludedPath) {
         if (Test-Path $fPa) {
             $fSi = (Get-Item $fPa).Length
             $filesizeFound += $fPa
-        }
-        else {
+        } else {
             $noFilesFound += "File Deleted: $fPa"
         }
     }
 }
 
+
 $allDeletedEntries = @($previousEntries) + $noFilesFound
+
+
+$allDeletedEntries = $allDeletedEntries | Where-Object { $_ -ne "File Deleted: $excludedPath" }
+
+
+if ($allDeletedEntries.Count -gt 12) {
+    $allDeletedEntries = $allDeletedEntries[-12..-1]
+}
+
 
 $allDeletedEntries | Set-Content $deletedFilePath
 
+
+$filesizeFound = $filesizeFound | Where-Object { $_ -ne $excludedPath }
 $filesizeFound | Out-File "$dmppath\Filesize.txt"
-$filesFound | Out-File "$dmppath\deletedFile.txt"
+$filesFound| Out-File "$dmppath\Deletedfile.txt"
+
+
 
 
 
