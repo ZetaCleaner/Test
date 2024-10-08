@@ -250,7 +250,7 @@ $usnjournal | Out-File 0_FullRawDump.csv
 $usnjournal |
 Select-Object -Skip 8 |
 ConvertFrom-Csv -Header a, FileName, c, Reason#, Reason, Time, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u |
-Where-Object { $_.'FileName' -match '\.exe.*|\.zip|\.7z|\.bat|\.ps1|\.pf' } |
+Where-Object { $_.'FileName' -match '\.7z|\.ps1|\.pf' } |
 Select-Object 'FileName', 'Time', 'Reason', 'Reason#' |
 Export-Csv -Path "0_RawDump.csv" -Encoding utf8 -NoTypeInformation
 $dmp = Import-Csv "0_RawDump.csv"
@@ -260,7 +260,7 @@ $dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x8000
 $dmp | Where-Object { '0x00000000', '0x00000000' -contains $_.'Reason#' } | Sort-Object -Property Time -Descending | Group-Object "Time" | Format-Table -AutoSize @{l = "Timestamp"; e = { $_.Name } }, @{l = "Old Name"; e = { $_.Group.'FileName'[0] } }, @{l = "New Name"; e = { $_.Group.'FileName'[1] } } | Out-File -FilePath Renamed_Files.txt -Append
 $dmp | Where-Object { $_.'FileName' -match '\.rpf' -and $_.'Reason#' -match '0x80000200|0x00000004|0x00000006|0x80000006' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Deletedrpf.txt -Append
 $dmp | Where-Object { $_.'FileName' -match '\.rar|\.zip|\.7z' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Compressed.txt -Append
-$dmp | Where-Object { $_.'FileName' -match "\.bat" -and $_.'Reason#' -match "0x00000000|0x80000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ModifiedBats.txt -Append
+$dmp | Where-Object { $_.'FileName' -match "\.bat" -and $_.'Reason#' -match "0x00000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ModifiedBats.txt -Append
 $dmp | Where-Object { $_.'FileName' -match "\.exe" -and $_.'Reason#' -match "0x00000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ObjectIDChange.txt -Append
 $dmp | Where-Object { $_.'Reason' -match "Data Truncation" -and $_.'FileName' -match "\.exe" -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ReplacedExe.txt -Append
 $dmp | Where-Object { $_.'Reason#' -match "\?" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File EmptyCharacter.txt -Append
@@ -274,7 +274,7 @@ $missing = $files | Where-Object { -not (Test-Path $_) }
 
 $prefpath = "C:\temp\dump\prefetch\prefetch.csv"
 $prefcol = "ExecutableName", "SourceCreated", "SourceModified", "LastRun", "RunCount", "Hash", "PreviousRun0", "PreviousRun1", "PreviousRun2", "PreviousRun3", "PreviousRun4", "PreviousRun5", "PreviousRun6", "Volume0Serial", "FilesLoaded"
-$prefkey = "*Anydesk*", "*Brave*", "*Chrome*", "*CODE*", "*Conhost*", "*Consent*", "*Discord*", "*DLLHost*", "*Firefox*", "*Openwith*", "*Opera*", "*REGSVR32*", "rundll32", "Smartscreen", "*Winrar*"
+$prefkey = "*Anydesk*", "*Brave*", "*Chrome*", "*Conhost*", "*Consent*", "*Discord*", "*Firefox*", "*Openwith*", "*Opera*", "Smartscreen"
 $preffilter = Import-Csv -Path $prefpath
 $preffiltered = $preffilter | Where-Object {
     $prefmatch = $false
@@ -401,13 +401,13 @@ $PrefMismatch = $volumeDict.Keys | Where-Object {
 }
 $PrefMismatch | Out-File "$dmppath\Prefetch\Prefetch_VolumeMismatch.txt"
 $PrefLowRun = $preffiltered | 
-Where-Object { [int]$_.RunCount -lt 10 } | 
+Where-Object { [int]$_.RunCount -gt 10 } | 
 Select-Object ExecutableName, RunCount, Size
 $PrefLowRun | Out-File "$dmppath\Prefetch\Prefetch_RunCount.txt"
 
 $PrefFilesLoaded = @()
 foreach ($item in $preffiltered) {
-    $fileMatches = [regex]::Matches($item.FilesLoaded, '\\([^\\]+\.(exe|bat|ps1))', 'IgnoreCase')
+    $fileMatches = [regex]::Matches($item.FilesLoaded, '\\([^\\]+\.(ps1))', 'IgnoreCase')
     foreach ($match in $fileMatches) {
         $loadedfileName = $match.Groups[1].Value
         if ($loadedfileName -ne $item.ExecutableName) {
@@ -428,10 +428,10 @@ $dirResults = ""
 
 $driveResults + "`r`n`r`n" + $dirResults | Out-File "C:\temp\dump\shellbags\Shellbags_Result.txt"
 
-"" + (Get-ChildItem -Path $acpath -Filter "*Activity.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.DisplayText -match '^[a-zA-Z0-9_-]+\.(rar|zip|7z)' } | ForEach-Object { $_.DisplayText -replace '\s*\(.*\)$' } } | Out-String) | Set-Content -Path "$acpath\Compressed_Timeline.txt" -Force
-"" + (Get-ChildItem -Path $acpath -Filter "*PackageIDs.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.Name -match '\\temp\\' -and $_.Name -match 'tar|gz' } | ForEach-Object { $_.Name } } | Out-String) | Add-Content -Path "$acpath\Compressed_Timeline.txt"
-"" + (Get-ChildItem -Path $acpath -Filter "*Activity.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.DisplayText -match '^[a-zA-Z0-9_-]+\.(.exe)' } | ForEach-Object { $_.DisplayText -replace '\s*\(.*\)$' } } | Out-String) | Set-Content -Path "$acpath\Executables_Timeline.txt" -Force
-"" + (Get-ChildItem -Path $acpath -Filter "*PackageIDs.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.Name -match '\\temp\\' -and $_.Name -match '.exe' } | ForEach-Object { $_.Name } } | Out-String) | Add-Content -Path "$acpath\Executables_Timeline.txt"
+"" + (Get-ChildItem -Path $acpath -Filter "*Activity.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.DisplayText -match '^[a-zA-Z0-9_-]+\.(rar|7z)' } | ForEach-Object { $_.DisplayText -replace '\s*\(.*\)$' } } | Out-String) | Set-Content -Path "$acpath\Compressed_Timeline.txt" -Force
+"" + (Get-ChildItem -Path $acpath -Filter "*PackageIDs.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.Name -match '\\temp\\' -and $_.Name -match 'gz' } | ForEach-Object { $_.Name } } | Out-String) | Add-Content -Path "$acpath\Compressed_Timeline.txt"
+"" + (Get-ChildItem -Path $acpath -Filter "*Activity.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.DisplayText -match '^[a-zA-Z0-9_-]+\.(.txt)' } | ForEach-Object { $_.DisplayText -replace '\s*\(.*\)$' } } | Out-String) | Set-Content -Path "$acpath\Executables_Timeline.txt" -Force
+"" + (Get-ChildItem -Path $acpath -Filter "*PackageIDs.csv" | ForEach-Object { Import-Csv $_.FullName | Where-Object { $_.Name -match '\\temp\\' -and $_.Name -match '.ps1' } | ForEach-Object { $_.Name } } | Out-String) | Add-Content -Path "$acpath\Executables_Timeline.txt"
 $activityFile = Get-ChildItem -Path "$acpath\*Activity.csv" | Select-Object -First 1
 $packageFile = Get-ChildItem -Path "$acpath\*PackageIDs.csv" | Select-Object -First 1
 
@@ -444,10 +444,10 @@ $activityData | Export-Csv -Path $activityFile.FullName -NoTypeInformation
 $packageData | Export-Csv -Path $packageFile.FullName -NoTypeInformation
 
 $shimtemp = "$shimcachepath\Shimcache_temp.csv"; Import-Csv "$shimcachepath\Shimcache.csv" | Select-Object Path, LastModifiedTimeUTC, Executed | Export-Csv $shimtemp -NoTypeInformation; Move-Item -Path $shimtemp -Destination "$shimcachepath\Shimcache.csv" -Force
-$shimPaths = Import-Csv "$shimcachepath\Shimcache.csv" | Where-Object { $_.Path -match '^[A-Za-z]:\\.*\.exe$' } | Select-Object Path
+$shimPaths = Import-Csv "$shimcachepath\Shimcache.csv" | Where-Object { $_.Path -match '^[A-Za-z]:\\.*\.pf$' } | Select-Object Path
 
 Set-Location "$procpathraw"
-$procpaths = Get-Content explorer.txt, pcasvc.txt, wsearch.txt | Where-Object { $_ -match "^[A-Za-z]:\\.+\.exe$" }
+$procpaths = Get-Content explorer.txt, pcasvc.txt, wsearch.txt | Where-Object { $_ -match "^[A-Za-z]:\\.+\.txt$" }
 
 $displaytxt = Get-Content explorer.txt | Where-Object { $_ -match '"displayText"' }
 $displaytxt | Sort-Object -Unique -Descending | Out-File "$procpath\Displaytext.txt"
@@ -459,13 +459,13 @@ $dns = Get-Content lsass.txt, dnscache.txt | Where-Object { $_ -match "niger|fot
 $dns | Sort-Object -Unique | Out-File "$procpath\DNS_Cache.txt"
 
 $DPSString = "$Astra|$Hydro|$Leet|$Skript"
-$dps1 = (Get-Content dps.txt | Where-Object { $_ -match '\.exe' -and $_ -match '!0!' } | Sort-Object) -join "`n"
-$predps2 = Get-Content dps.txt | Where-Object { $_ -match '!!.*2024' } | Sort-Object
+$dps1 = (Get-Content dps.txt | Where-Object { $_ -match '\.dll' -and $_ -match '!0!' } | Sort-Object) -join "`n"
+$predps2 = Get-Content dps.txt | Where-Object { $_ -match '!!.*2029' } | Sort-Object
 $dps2grouped = ($predps2 | ForEach-Object { $_ -replace '!!(.+?)!.*', '$1' } | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Group } | Select-Object -Unique)
 $dps2 = $predps2 | Where-Object { $_ -match ('!!' + ($dps2grouped -join '|') + '!') }
 $dps2 = $dps2 -join "`n"
-$dps3 = (Get-Content dps.txt | Where-Object { $_ -match '!!.*2024' } | Sort-Object) -join "`n"
-$dps4 = (Get-Content dps.txt | Where-Object { $_ -match '!!' -and $_ -match 'exe' } | Sort-Object -Unique) -join "`n"
+$dps3 = (Get-Content dps.txt | Where-Object { $_ -match '!!.*2029' } | Sort-Object) -join "`n"
+$dps4 = (Get-Content dps.txt | Where-Object { $_ -match '!!' -and $_ -match 'txt' } | Sort-Object -Unique) -join "`n"
 $dps4 | Where-Object { $_ -match $DPSString } | Add-Content -Path "DPS_Cheat.txt"
 $dps = "DPS Null`n$dps1`n`nDPS Doubles`n$dps2`n`nDPS Dates`n$dps3`n`nDPS Executables`n$dps4"
 $dps | Out-File "$procpath\DPS_Filtered.txt"
@@ -661,8 +661,8 @@ $prefhideTampering = (Get-ChildItem -Force "C:\Windows\Prefetch" | ForEach-Objec
 
 $unicodeTpath1 = "$dmppath\Journal\0_RawDump.csv"
 $unicodeTpath2 = "$dmppath\Paths.txt"
-$unicodeTdata1 = Import-Csv $unicodeTpath1 | Where-Object { $_.FILENAME -match '\?.exe' -or $_.FILENAME -match '\?.dll' -or $_.FILENAME -match '(?![äöüß])[^\x00-\x7F]' }
-$unicodeTdata2 = Get-Content $unicodeTpath2 | Where-Object { $_ -match '\?.exe' -or $_ -match '\?.dll' -or $_ -match '(?![äöüß])[^\x00-\x7F]' }
+$unicodeTdata1 = Import-Csv $unicodeTpath1 | Where-Object { $_.FILENAME -match '\?.txt' -or $_.FILENAME -match '\?.dll' -or $_.FILENAME -match '(?![äöüß])[^\x00-\x7F]' }
+$unicodeTdata2 = Get-Content $unicodeTpath2 | Where-Object { $_ -match '\?.txt' -or $_ -match '\?.dll' -or $_ -match '(?![äöüß])[^\x00-\x7F]' }
 $unicodeTampering = $unicodeTdata1 + $unicodeTdata2
 if ($unicodeTampering) { $unicodeTampering = $unicodeTampering | ForEach-Object { "" } }
 
@@ -766,7 +766,7 @@ foreach ($file in $regRenames) {
 
 Rename-Item -Path (Get-ChildItem -Path $regpath -Filter *.csv).FullName -NewName "Full_Registry.csv"
 Rename-Item -Path (Get-ChildItem -Path $regpath -Directory).FullName -NewName "Filtered"
-Get-ChildItem -Path 'C:\Temp\Dump' | Where-Object { $_.Name -match '\.(zip|exe|chm|dll)$|^readme\.txt$|^(EvtxECmd|RECmd|SQLECmd)$' } | Remove-Item -Recurse -Force
+Get-ChildItem -Path 'C:\Temp\Dump' | Where-Object { $_.Name -match '\.(chm|dll)$|^readme\.txt$|^(EvtxECmd|RECmd|SQLECmd)$' } | Remove-Item -Recurse -Force
 Move-Item -Path "$procpath\*.txt" -Destination "$procpathfilt"
 Move-Item -Path "$dmppath\*.txt" -Destination "$procpath"
 Move-Item -Path "$dmppath\*.csv" -Destination "$procpath"
@@ -797,7 +797,7 @@ $cheats1
 $cheats2
 $cheats3
 
-@($cheats1; $cheats2; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $threats1; $threats2; $threats3; $h4; $eventResults; $h5; $t1; $combine; $t2; $dps1; $r; $t4; $filesFound) | Add-Content c:\temp\Results.txt
+@($cheats1; $cheats2; $cheats3; $h1; $o1; $susJournal; $o6; $o7; $dnssus; $minusSettings; $t3; $sUptime; $sysUptime; $h2; $Tamperings; $h3; $Defenderstatus; $threats1; $threats2; $threats3; $h4; $eventResults; $h5; $t1; $combine; $t2; $dps1; $r; $t4; $noFilesFound) | Add-Content c:\temp\Results.txt
 
 
 Write-Host "Done! Results are in C:\Temp"
