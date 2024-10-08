@@ -530,51 +530,20 @@ $paths = Get-Content $dmppath\Paths.txt
 
 $filesizeFound = @()
 $noFilesFound = @()
-
-$deletedFilePath = "$dmppath\Deletedfile.txt"
-$excludedPath = 'C:\ProgramData\Epic\EpicGamesLauncher\InstaIIChainner.exe'
-
-if (Test-Path $deletedFilePath) {
-    $previousEntries = Get-Content $deletedFilePath
-} else {
-    $previousEntries = @()
-}
-
 Get-Content "$dmppath\Paths.txt" | ForEach-Object {
-    $fPa = $_  
-
-
-    if ($fPa -ne $excludedPath) {
-        if (Test-Path $fPa) {
-            $fSi = (Get-Item $fPa).Length
+    $fPa = $_
+    if (Test-Path $fPa) {
+        $fSi = (Get-Item $fPa).Length
+        if ($fSi -ge ($filesizeL) -and $fSi -le ($filesizeH)) {
             $filesizeFound += $fPa
-        } else {
-            $noFilesFound += "File Deleted: $fPa"
         }
     }
+    else {
+        $noFilesFound += "File Deleted: $fPa"
+    }
 }
-
-
-$allDeletedEntries = @($previousEntries) + $noFilesFound
-
-
-$allDeletedEntries = $allDeletedEntries | Where-Object { $_ -ne "File Deleted: $excludedPath" }
-
-
-if ($allDeletedEntries.Count -gt 12) {
-    $allDeletedEntries = $allDeletedEntries[-12..-1]
-}
-
-
-$allDeletedEntries | Set-Content $deletedFilePath
-
-
-$filesizeFound = $filesizeFound | Where-Object { $_ -ne $excludedPath }
 $filesizeFound | Out-File "$dmppath\Filesize.txt"
-$filesFound| Out-File "$dmppath\DeletedFiles.txt"
-
-
-
+$noFilesFound | Out-File "$dmppath\Deletedfile.txt"
 
 
 
