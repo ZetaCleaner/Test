@@ -571,7 +571,7 @@ $allDeletedEntries | Set-Content $deletedFilePath
 
 $filesizeFound = $filesizeFound | Where-Object { $_ -ne $excludedPath }
 $filesizeFound | Out-File "$dmppath\Filesize.txt"
-$filesFound| Out-File "$dmppath\Deletedfile.txt"
+$filesFound| Out-File "$dmppath\DeletedFiles.txt"
 
 
 
