@@ -216,7 +216,7 @@ foreach ($entry in $processList1.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -s -a -t -l 1 -pid $pidVal | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
     }
 }
 
@@ -224,7 +224,7 @@ foreach ($entry in $processList2.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -l 5 -pid $pidVal | Select-String -Pattern "\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -l 1 -pid $pidVal | Select-String -Pattern "\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
     }
 }
 
@@ -232,7 +232,7 @@ foreach ($entry in $processList3.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -s -a -t -l 1 -pid $pidVal | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
     }
 }
 
