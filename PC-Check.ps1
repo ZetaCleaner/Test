@@ -56,7 +56,7 @@ $h5 = & { $l1; "|   Executables   |"; $l2; }
 Clear-Host
 if ((Read-Host "`n`n`nThis program requires 1GB of free disk space on your System Disk.`n`n`nWe will be downloading the programs: `n`n- ESEDatabaseView by Nirsoft `n- strings2 by Geoff McDonald (more infos at split-code.com) `n- ACC Parser, PECmd, EvtxCmd, SBECmd, SQLECmd, RECmd and WxTCmd from Eric Zimmermans Tools (more infos at ericzimmerman.github.io).`n`nThis will be fully local, no data will be collected.`nIf Traces of Cheats are found, you are highly advised to reset your PC or you could face repercussions on other Servers.`nRunning PC Checking Programs, including this script, outside of PC Checks may have impact on the outcome.`nDo you agree to a PC Check and do you agree to download said tools? (Y/N)") -eq "Y") {
     Clear-Host
-    Write-Host "`n`n`n-------------------------"-ForegroundColor red
+    Write-Host "`n`n`n-------------------------"-ForegroundColor green
     Write-Host "|    Download Assets    |" -ForegroundColor red
     Write-Host "|      Please Wait      |" -ForegroundColor red
     Write-Host "-------------------------`n"-ForegroundColor red
@@ -194,7 +194,7 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
         [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
     }
     elseif ($null -ne $pidVal) {
-        $process = Get-Process -Id $pidVal -ErrorAction SilentlyContinue
+        $process = Get-Process -Id $pidVal
         if ($process) {
             $uptime = (Get-Date) - $process.StartTime
             $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
@@ -216,7 +216,7 @@ foreach ($entry in $processList1.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal -ErrorAction SilentlyContinue | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
     }
 }
 
@@ -224,7 +224,7 @@ foreach ($entry in $processList2.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -l 5 -pid $pidVal -ErrorAction SilentlyContinue | Select-String -Pattern "\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -l 5 -pid $pidVal | Select-String -Pattern "\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
     }
 }
 
@@ -232,7 +232,7 @@ foreach ($entry in $processList3.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal -ErrorAction SilentlyContinue | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
     }
 }
 
