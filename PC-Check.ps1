@@ -235,7 +235,7 @@ foreach ($entry in $processList3.GetEnumerator()) {
     }
 }
 
-$prepaths = "$procpathraw\dps.txt", "$procpathraw\diagtrack.txt", "$procpathraw\wsearch.txt", "$procpathraw\lsass.txt", "$procpathraw\sysmain.txt", "$procpathraw\dnscache.txt"
+$prepaths = "$procpathraw\dps.txt", "$procpathraw\diagtrack.txt", "$procpathraw\wsearch.txt", "$procpathraw\sysmain.txt", "$procpathraw\dnscache.txt"
 
 foreach ($lines in $prepaths) {
     $content = Get-Content $lines | ForEach-Object { $_.Split(',')[-1].Trim() }
