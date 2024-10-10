@@ -190,7 +190,7 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
 
-    if ($pidVal -eq 0) {
+    if ($pidVal -eq 20) {
         [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
     }
     elseif ($null -ne $pidVal) {
