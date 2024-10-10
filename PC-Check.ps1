@@ -254,14 +254,14 @@ Where-Object { $_.'FileName' -match '\.7z|\.ps1|\.pf' } |
 Select-Object 'FileName', 'Time', 'Reason', 'Reason#' |
 Export-Csv -Path "0_RawDump.csv" -Encoding utf8 -NoTypeInformation
 $dmp = Import-Csv "0_RawDump.csv"
-$dmp | Where-Object { $_.'FileName' -match "\.pf" -and ($_.'Reason#' -match "0x00000000|0x00000000") } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File DeletedPF.txt -Append
-$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x00000000' -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-String -Width 1000 | Format-Table -HideTableHeaders | Out-File CreatedFiles.txt -Append
+$dmp | Where-Object { $_.'FileName' -match "\.pf" -and ($_.'Reason#' -match "0x70000000|0x00000000") } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File DeletedPF.txt -Append
+$dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x70000000' -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-String -Width 1000 | Format-Table -HideTableHeaders | Out-File CreatedFiles.txt -Append
 $dmp | Where-Object { $_.'FileName' -like "*.exe*" -and $_.'Reason#' -eq '0x80000000' } | Select-Object 'FileName', 'Time' | Out-String -Width 1000 | Out-File DeletedFiles.txt -Append
-$dmp | Where-Object { '0x00000000', '0x00000000' -contains $_.'Reason#' } | Sort-Object -Property Time -Descending | Group-Object "Time" | Format-Table -AutoSize @{l = "Timestamp"; e = { $_.Name } }, @{l = "Old Name"; e = { $_.Group.'FileName'[0] } }, @{l = "New Name"; e = { $_.Group.'FileName'[1] } } | Out-File -FilePath Renamed_Files.txt -Append
+$dmp | Where-Object { '0x00000000', '0x70000000' -contains $_.'Reason#' } | Sort-Object -Property Time -Descending | Group-Object "Time" | Format-Table -AutoSize @{l = "Timestamp"; e = { $_.Name } }, @{l = "Old Name"; e = { $_.Group.'FileName'[0] } }, @{l = "New Name"; e = { $_.Group.'FileName'[1] } } | Out-File -FilePath Renamed_Files.txt -Append
 $dmp | Where-Object { $_.'FileName' -match '\.rpf' -and $_.'Reason#' -match '0x80000200|0x00000004|0x00000006|0x80000006' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Deletedrpf.txt -Append
 $dmp | Where-Object { $_.'FileName' -match '\.rar|\.zip|\.7z' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File Compressed.txt -Append
-$dmp | Where-Object { $_.'FileName' -match "\.bat" -and $_.'Reason#' -match "0x00000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ModifiedBats.txt -Append
-$dmp | Where-Object { $_.'FileName' -match "\.exe" -and $_.'Reason#' -match "0x00000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ObjectIDChange.txt -Append
+$dmp | Where-Object { $_.'FileName' -match "\.bat" -and $_.'Reason#' -match "0x11000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ModifiedBats.txt -Append
+$dmp | Where-Object { $_.'FileName' -match "\.exe" -and $_.'Reason#' -match "0x70000000" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ObjectIDChange.txt -Append
 $dmp | Where-Object { $_.'Reason' -match "Data Truncation" -and $_.'FileName' -match "\.exe" -and $_.'Filename' -notlike '*.pf' } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File ReplacedExe.txt -Append
 $dmp | Where-Object { $_.'Reason#' -match "\?" } | Select-Object 'FileName', 'Time' | Sort-Object 'Time' -Descending -Unique | Out-File EmptyCharacter.txt -Append
 $o2 = Get-Content "$dmppath\Journal\0_RawDump.csv" | Select-String -Pattern "niger|fotze|" | Select-Object -ExpandProperty Line | Sort-Object -Unique
