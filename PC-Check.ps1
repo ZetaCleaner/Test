@@ -56,7 +56,7 @@ $h5 = & { $l1; "|   Executables   |"; $l2; }
 Clear-Host
 if ((Read-Host "`n`n`nThis program requires 1GB of free disk space on your System Disk.`n`n`nWe will be downloading the programs: `n`n- ESEDatabaseView by Nirsoft `n- strings2 by Geoff McDonald (more infos at split-code.com) `n- ACC Parser, PECmd, EvtxCmd, SBECmd, SQLECmd, RECmd and WxTCmd from Eric Zimmermans Tools (more infos at ericzimmerman.github.io).`n`nThis will be fully local, no data will be collected.`nIf Traces of Cheats are found, you are highly advised to reset your PC or you could face repercussions on other Servers.`nRunning PC Checking Programs, including this script, outside of PC Checks may have impact on the outcome.`nDo you agree to a PC Check and do you agree to download said tools? (Y/N)") -eq "Y") {
     Clear-Host
-    Write-Host "`n`n`n-------------------------"-ForegroundColor red
+    Write-Host "`n`n`n-------------------------"-ForegroundColor green
     Write-Host "|    Download Assets    |" -ForegroundColor red
     Write-Host "|      Please Wait      |" -ForegroundColor red
     Write-Host "-------------------------`n"-ForegroundColor red
@@ -211,13 +211,12 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
 
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
 
+
 foreach ($entry in $processList1.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        $arguments = @("-s", "-a", "-t", "-l", 5, "-pid", $pidVal)
-        # Fehlerausgabe unterdrücken
-        $null = Start-Process -FilePath "$dmppath\strings2.exe" -ArgumentList $arguments -NoNewWindow -Wait -ErrorAction SilentlyContinue -PassThru | Out-Null
+        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal -ErrorAction SilentlyContinue | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
 
@@ -225,9 +224,7 @@ foreach ($entry in $processList2.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        $arguments = @("-l", 5, "-pid", $pidVal)
-        # Fehlerausgabe unterdrücken
-        $null = Start-Process -FilePath "$dmppath\strings2.exe" -ArgumentList $arguments -NoNewWindow -Wait -ErrorAction SilentlyContinue -PassThru | Out-Null
+        & "$dmppath\strings2.exe" -l 5 -pid $pidVal -ErrorAction SilentlyContinue | Select-String -Pattern "\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
 
@@ -235,9 +232,7 @@ foreach ($entry in $processList3.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        $arguments = @("-s", "-a", "-t", "-l", 5, "-pid", $pidVal)
-        # Fehlerausgabe unterdrücken
-        $null = Start-Process -FilePath "$dmppath\strings2.exe" -ArgumentList $arguments -NoNewWindow -Wait -ErrorAction SilentlyContinue -PassThru | Out-Null
+        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal -ErrorAction SilentlyContinue | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
 
