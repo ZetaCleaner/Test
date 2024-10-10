@@ -178,6 +178,7 @@ $processList2 = @{
 $processList3 = @{
     "dnscache" = Get-ProcessID -ServiceName "Dnscache"
     "sysmain"  = Get-ProcessID -ServiceName "Sysmain"
+    "lsass"    = Get-ProcessID -ServiceName "lsass"
 }
 $processList4 = @{
     "dusmsvc"  = Get-ProcessID -ServiceName "Dnscache"
