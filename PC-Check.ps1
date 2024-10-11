@@ -200,7 +200,15 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
             $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
             [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
         }
+        else {
+            [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
+        }
+    }
+    else {
+        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
+    }
 }
+
 
 
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
