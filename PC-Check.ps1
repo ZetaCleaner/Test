@@ -157,8 +157,7 @@ if ($minusResults) {
 }
 
 
-Write-Host "   Dumping Process Memory" -ForegroundColor yellow
-
+Write-Host "   Dumping Process Memory"-ForegroundColor yellow
 function Get-ProcessID {
     param(
         [string]$ServiceName
@@ -166,7 +165,6 @@ function Get-ProcessID {
     $processID = (Get-CimInstance -Query "SELECT ProcessId FROM Win32_Service WHERE Name='$ServiceName'").ProcessId
     return $processID
 }
-
 $processList1 = @{
     "DPS"       = Get-ProcessID -ServiceName "DPS"
     "DiagTrack" = Get-ProcessID -ServiceName "DiagTrack"
@@ -186,39 +184,23 @@ $processList4 = @{
     "dusmsvc"  = Get-ProcessID -ServiceName "Dnscache"
     "eventlog" = Get-ProcessID -ServiceName "Sysmain"
 }
+$processList = $processList1 + $processList2 + $processlist3
 
-$processList = $processList1 + $processList2 + $processList3 + $processList4
+$uptime = foreach ($entry in $processList.GetEnumerator()) {
+    $service = $entry.Key
+    $pidVal = $entry.Value
 
-while ($true) {
-    Clear-Host
-    $uptime = foreach ($entry in $processList.GetEnumerator()) {
-        $service = $entry.Key
-        $pidVal = $entry.Value
-
-        if ($pidVal -eq 20) {
-            [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
-        }
-        elseif ($null -ne $pidVal) {
-            $process = Get-Process -Id $pidVal -ErrorAction SilentlyContinue
-            if ($process) {
-                $uptime = (Get-Date) - $process.StartTime
-                $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
-                [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
-            }
-            else {
-                [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
-            }
-        }
-        else {
-            [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
-        }
+    if ($pidVal -eq 20) {
+        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
     }
-
-    # Output the results
-    $uptime | Format-Table -AutoSize
-
-    # Wait before the next iteration
-    Start-Sleep -Seconds
+    elseif ($null -ne $pidVal) {
+        $process = Get-Process -Id $pidVal
+        if ($process) {
+            $uptime = (Get-Date) - $process.StartTime
+            $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
+            [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
+        }
+}
 
 
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
