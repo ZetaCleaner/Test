@@ -165,47 +165,72 @@ function Get-ProcessID {
     $processID = (Get-CimInstance -Query "SELECT ProcessId FROM Win32_Service WHERE Name='$ServiceName'").ProcessId
     return $processID
 }
-$processList1 = @{
-    "DPS"       = Get-ProcessID -ServiceName "DPS"
-    "DiagTrack" = Get-ProcessID -ServiceName "DiagTrack"
-    "WSearch"   = Get-ProcessID -ServiceName "WSearch"
-}
-$processList2 = @{
-    "PcaSvc"   = Get-ProcessID -ServiceName "PcaSvc"
-    "explorer" = Get-ProcessID -ServiceName "explorer"
-    "dwm"      = Get-ProcessID -ServiceName "dwm"
-}
-$processList3 = @{
-    "dnscache" = Get-ProcessID -ServiceName "Dnscache"
-    "sysmain"  = Get-ProcessID -ServiceName "Sysmain"
-    "lsass"    = Get-ProcessID -ServiceName "lsass"
-}
-$processList4 = @{
-    "dusmsvc"  = Get-ProcessID -ServiceName "Dnscache"
-    "eventlog" = Get-ProcessID -ServiceName "Sysmain"
-}
-$processList = $processList1 + $processList2 + $processlist3
 
-$uptime = foreach ($entry in $processList.GetEnumerator()) {
-    $service = $entry.Key
-    $pidVal = $entry.Value
+# List von Prozessen
+$processList1 = @(
+    "DPS",
+    "DiagTrack",
+    "WSearch"
+)
 
-    if ($pidVal -eq 20) {
-        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
-    }
-    elseif ($null -ne $pidVal) {
-        $process = Get-Process -Id $pidVal
-        if ($process) {
+$processList2 = @(
+    "PcaSvc",
+    "explorer",
+    "dwm"
+)
+
+$processList3 = @(
+    "dnscache",
+    "sysmain",
+    "lsass"
+)
+
+$processList4 = @(
+    "dusmsvc",
+    "eventlog"
+)
+
+# Kombiniere alle Listen in eine einzige
+$processList = $processList1 + $processList2 + $processList3 + $processList4
+
+# Alle Prozesse abrufen
+$uptimeData = @()
+foreach ($service in $processList) {
+    $pidVal = Get-ProcessID -ServiceName $service
+
+    if ($null -ne $pidVal) {
+        try {
+            $process = Get-Process -Id $pidVal -ErrorAction Stop
+            # Uptime berechnen
             $uptime = (Get-Date) - $process.StartTime
-            $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
-            [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
+            $uptimeFormatted = '{0} Tage, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
+            $uptimeData += [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
+        } 
+        catch {
+            # Bei einem Fehler, wenn der Prozess nicht gefunden wird, gehe zur nächsten Schleife
+            $uptimeData += [PSCustomObject]@{ Service = $service; Uptime = 'Nicht gefunden' }
         }
-        else {
-            [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
-        }
-    }
+    } 
     else {
-        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
+        # Wenn die PID null ist, das Uptime nicht berechnen
+        $uptimeData += [PSCustomObject]@{ Service = $service; Uptime = 'Nicht gefunden' }
+    }
+}
+
+# Bestimme die letzte Uptime für nicht laufende Prozesse in processList2
+$lastUptime = ($uptimeData | Where-Object { $_.Service -in $processList1 -and $_.Uptime -ne 'Nicht gefunden' }).Uptime
+
+# Ergebnis anpassen für processList2
+$finalResults = foreach ($entry in $uptimeData) {
+    if ($entry.Service -in $processList2) {
+        # Wenn der Dienst nicht läuft, die letzte Uptime verwenden
+        if ($entry.Uptime -eq 'Nicht gefunden') {
+            [PSCustomObject]@{ Service = $entry.Service; Uptime = $lastUptime }
+        } else {
+            $entry
+        }
+    } else {
+        $entry
     }
 }
 
