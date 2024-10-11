@@ -56,7 +56,7 @@ $h5 = & { $l1; "|   Executables   |"; $l2; }
 Clear-Host
 if ((Read-Host "`n`n`nThis program requires 1GB of free disk space on your System Disk.`n`n`nWe will be downloading the programs: `n`n- ESEDatabaseView by Nirsoft `n- strings2 by Geoff McDonald (more infos at split-code.com) `n- ACC Parser, PECmd, EvtxCmd, SBECmd, SQLECmd, RECmd and WxTCmd from Eric Zimmermans Tools (more infos at ericzimmerman.github.io).`n`nThis will be fully local, no data will be collected.`nIf Traces of Cheats are found, you are highly advised to reset your PC or you could face repercussions on other Servers.`nRunning PC Checking Programs, including this script, outside of PC Checks may have impact on the outcome.`nDo you agree to a PC Check and do you agree to download said tools? (Y/N)") -eq "Y") {
     Clear-Host
-    Write-Host "`n`n`n-------------------------"-ForegroundColor blue
+    Write-Host "`n`n`n-------------------------"-ForegroundColor green
     Write-Host "|    Download Assets    |" -ForegroundColor red
     Write-Host "|      Please Wait      |" -ForegroundColor red
     Write-Host "-------------------------`n"-ForegroundColor red
@@ -165,74 +165,50 @@ function Get-ProcessID {
     $processID = (Get-CimInstance -Query "SELECT ProcessId FROM Win32_Service WHERE Name='$ServiceName'").ProcessId
     return $processID
 }
+$processList1 = @{
+    "DPS"       = Get-ProcessID -ServiceName "DPS"
+    "DiagTrack" = Get-ProcessID -ServiceName "DiagTrack"
+    "WSearch"   = Get-ProcessID -ServiceName "WSearch"
+}
+$processList2 = @{
+    "PcaSvc"   = Get-ProcessID -ServiceName "PcaSvc"
+    "explorer" = Get-ProcessID -ServiceName "explorer"
+    "dwm"      = Get-ProcessID -ServiceName "dwm"
+}
+$processList3 = @{
+    "dnscache" = Get-ProcessID -ServiceName "Dnscache"
+    "sysmain"  = Get-ProcessID -ServiceName "Sysmain"
+    "lsass"    = Get-ProcessID -ServiceName "lsass"
+}
+$processList4 = @{
+    "dusmsvc"  = Get-ProcessID -ServiceName "Dnscache"
+    "eventlog" = Get-ProcessID -ServiceName "Sysmain"
+}
+$processList = $processList1 + $processList2 + $processlist3
 
-# List von Prozessen
-$processList1 = @(
-    "DPS",
-    "DiagTrack",
-    "WSearch"
-)
+$uptime = foreach ($entry in $processList.GetEnumerator()) {
+    $service = $entry.Key
+    $pidVal = $entry.Value
 
-$processList2 = @(
-    "PcaSvc",
-    "explorer",
-    "dwm"
-)
-
-$processList3 = @(
-    "dnscache",
-    "sysmain",
-    "lsass"
-)
-
-$processList4 = @(
-    "dusmsvc",
-    "eventlog"
-)
-
-# Kombiniere alle Listen in eine einzige
-$processList = $processList1 + $processList2 + $processList3 + $processList4
-
-# Alle Prozesse abrufen
-$uptimeData = @()
-foreach ($service in $processList) {
-    $pidVal = Get-ProcessID -ServiceName $service
-
-    if ($null -ne $pidVal) {
-        try {
-            $process = Get-Process -Id $pidVal -ErrorAction Stop
-            # Uptime berechnen
+    if ($pidVal -eq 20) {
+        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
+    }
+    elseif ($null -ne $pidVal) {
+        $process = Get-Process -Id $pidVal
+        if ($process) {
             $uptime = (Get-Date) - $process.StartTime
-            $uptimeFormatted = '{0} Tage, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
-            $uptimeData += [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
-        } 
-        catch {
-            # Bei einem Fehler, wenn der Prozess nicht gefunden wird, gehe zur nächsten Schleife
-            $uptimeData += [PSCustomObject]@{ Service = $service; Uptime = 'Nicht gefunden' }
+            $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
+            [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
         }
-    } 
+        else {
+            [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
+        }
+    }
     else {
-        # Wenn die PID null ist, das Uptime nicht berechnen
-        $uptimeData += [PSCustomObject]@{ Service = $service; Uptime = 'Nicht gefunden' }
+        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
     }
 }
 
-# Bestimme die letzte Uptime für nicht laufende Prozesse in processList2
-$lastUptime = ($uptimeData | Where-Object { $_.Service -in $processList1 -and $_.Uptime -ne 'Nicht gefunden' }).Uptime
-
-# Ergebnis anpassen für processList2
-$finalResults = foreach ($entry in $uptimeData) {
-    if ($entry.Service -in $processList2) {
-        # Wenn der Dienst nicht läuft, die letzte Uptime verwenden
-        if ($entry.Uptime -eq 'Nicht gefunden') {
-            [PSCustomObject]@{ Service = $entry.Service; Uptime = $lastUptime }
-        } else {
-            $entry
-        }
-    } else {
-        $entry
-    }
-}
 
 
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
