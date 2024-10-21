@@ -56,7 +56,7 @@ $h5 = & { $l1; "|   Executables   |"; $l2; }
 Clear-Host
 if ((Read-Host "`n`n`nThis program requires 1GB of free disk space on your System Disk.`n`n`nWe will be downloading the programs: `n`n- ESEDatabaseView by Nirsoft `n- strings2 by Geoff McDonald (more infos at split-code.com) `n- ACC Parser, PECmd, EvtxCmd, SBECmd, SQLECmd, RECmd and WxTCmd from Eric Zimmermans Tools (more infos at ericzimmerman.github.io).`n`nThis will be fully local, no data will be collected.`nIf Traces of Cheats are found, you are highly advised to reset your PC or you could face repercussions on other Servers.`nRunning PC Checking Programs, including this script, outside of PC Checks may have impact on the outcome.`nDo you agree to a PC Check and do you agree to download said tools? (Y/N)") -eq "Y") {
     Clear-Host
-    Write-Host "`n`n`n-------------------------"-ForegroundColor blue
+    Write-Host "`n`n`n-------------------------"-ForegroundColor red
     Write-Host "|    Download Assets    |" -ForegroundColor red
     Write-Host "|      Please Wait      |" -ForegroundColor red
     Write-Host "-------------------------`n"-ForegroundColor red
@@ -172,13 +172,13 @@ $processList1 = @{
 }
 $processList2 = @{
     "PcaSvc"   = Get-ProcessID -ServiceName "PcaSvc"
-    "explorer" = Get-ProcessID -ServiceName "explorer"
-    "dwm"      = Get-ProcessID -ServiceName "dwm"
+    "explorer" = (Get-Process explorer).Id
+    "dwm"      = (Get-Process dwm).Id
 }
 $processList3 = @{
     "dnscache" = Get-ProcessID -ServiceName "Dnscache"
     "sysmain"  = Get-ProcessID -ServiceName "Sysmain"
-    "lsass"    = (Get-Process lsass -ErrorAction SilentlyContinue).Id
+    "lsass"    = (Get-Process lsass).Id
 }
 $processList4 = @{
     "dusmsvc"  = Get-ProcessID -ServiceName "Dnscache"
@@ -194,40 +194,28 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
         [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
     }
     elseif ($null -ne $pidVal) {
-        $process = Get-Process -Id $pidVal
+        $process = Get-Process -Id $pidVal -ErrorAction SilentlyContinue
         if ($process) {
             $uptime = (Get-Date) - $process.StartTime
             $uptimeFormatted = '{0} days, {1:D2}:{2:D2}:{3:D2}' -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $uptime.Seconds
             [PSCustomObject]@{ Service = $service; Uptime = $uptimeFormatted }
         }
-    }
-}
-
-
-
-$sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
-
-function Dump-ProcessMemory {
-    param (
-        [string]$service,
-        [int]$pidVal
-    )
-    if ($null -ne $pidVal -and $pidVal -ne 0) {
-        try {
-            Get-Process -Id $pidVal -ErrorAction Stop
-            # Führe strings2.exe nur bei validen Prozessen aus
-            & "$dmppath\strings2.exe" -s -a -t -l 6 -pid $pidVal | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
-        } catch {
-            Write-Host "Could not dump memory for $service (PID: $pidVal)" -ForegroundColor red
+        else {
+            [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
         }
     }
+    else {
+        [PSCustomObject]@{ Service = $service; Uptime = 'Stopped' }
+    }
 }
+
+$sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
 
 foreach ($entry in $processList1.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -s -a -t -l 6 -pid $pidVal | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Select-String -Pattern "\.exe|\.bat|\.ps1|\.rar|\.zip|\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
 
@@ -235,7 +223,7 @@ foreach ($entry in $processList2.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -l 6 -pid $pidVal | Select-String -Pattern "\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -l 5 -pid $pidVal | Select-String -Pattern "\.exe|\.bat|\.ps1|\.rar|\.zip|\.7z|\.dll|file:///" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
 
@@ -243,12 +231,11 @@ foreach ($entry in $processList3.GetEnumerator()) {
     $service = $entry.Key
     $pidVal = $entry.Value
     if ($null -ne $pidVal) {
-        & "$dmppath\strings2.exe" -s -a -t -l 6 -pid $pidVal | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        & "$dmppath\strings2.exe" -s -a -t -l 5 -pid $pidVal | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8
     }
 }
 
-$prepaths = "$procpathraw\dps.txt", "$procpathraw\diagtrack.txt", "$procpathraw\wsearch.txt", "$procpathraw\sysmain.txt", "$procpathraw\dnscache.txt"
-
+$prepaths = "$procpathraw\dps.txt", "$procpathraw\diagtrack.txt", "$procpathraw\wsearch.txt", "$procpathraw\lsass.txt", "$procpathraw\sysmain.txt", "$procpathraw\dnscache.txt"
 
 foreach ($lines in $prepaths) {
     $content = Get-Content $lines | ForEach-Object { $_.Split(',')[-1].Trim() }
