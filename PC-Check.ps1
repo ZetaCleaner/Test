@@ -56,7 +56,7 @@ $h5 = & { $l1; "|   Executables   |"; $l2; }
 Clear-Host
 if ((Read-Host "`n`n`nThis program requires 1GB of free disk space on your System Disk.`n`n`nWe will be downloading the programs: `n`n- ESEDatabaseView by Nirsoft `n- strings2 by Geoff McDonald (more infos at split-code.com) `n- ACC Parser, PECmd, EvtxCmd, SBECmd, SQLECmd, RECmd and WxTCmd from Eric Zimmermans Tools (more infos at ericzimmerman.github.io).`n`nThis will be fully local, no data will be collected.`nIf Traces of Cheats are found, you are highly advised to reset your PC or you could face repercussions on other Servers.`nRunning PC Checking Programs, including this script, outside of PC Checks may have impact on the outcome.`nDo you agree to a PC Check and do you agree to download said tools? (Y/N)") -eq "Y") {
     Clear-Host
-    Write-Host "`n`n`n-------------------------"-ForegroundColor green
+    Write-Host "`n`n`n-------------------------"-ForegroundColor blue
     Write-Host "|    Download Assets    |" -ForegroundColor red
     Write-Host "|      Please Wait      |" -ForegroundColor red
     Write-Host "-------------------------`n"-ForegroundColor red
@@ -178,7 +178,7 @@ $processList2 = @{
 $processList3 = @{
     "dnscache" = Get-ProcessID -ServiceName "Dnscache"
     "sysmain"  = Get-ProcessID -ServiceName "Sysmain"
-    "lsass"    = (Get-Process lsass).Id
+    "lsass"    = (Get-Process lsass -ErrorAction SilentlyContinue).Id
 }
 $processList4 = @{
     "dusmsvc"  = Get-ProcessID -ServiceName "Dnscache"
@@ -207,6 +207,21 @@ $uptime = foreach ($entry in $processList.GetEnumerator()) {
 
 $sUptime = $uptime | Sort-Object Service | Format-Table -AutoSize -HideTableHeaders | Out-String
 
+function Dump-ProcessMemory {
+    param (
+        [string]$service,
+        [int]$pidVal
+    )
+    if ($null -ne $pidVal -and $pidVal -ne 0) {
+        try {
+            Get-Process -Id $pidVal -ErrorAction Stop
+            # Führe strings2.exe nur bei validen Prozessen aus
+            & "$dmppath\strings2.exe" -s -a -t -l 6 -pid $pidVal | Select-String -Pattern "\.7z|\.dll" | Set-Content -Path "$procpathraw\$service.txt" -Encoding UTF8 -ErrorAction SilentlyContinue
+        } catch {
+            Write-Host "Could not dump memory for $service (PID: $pidVal)" -ForegroundColor red
+        }
+    }
+}
 
 foreach ($entry in $processList1.GetEnumerator()) {
     $service = $entry.Key
