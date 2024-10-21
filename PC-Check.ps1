@@ -172,8 +172,8 @@ $processList1 = @{
 }
 $processList2 = @{
     "PcaSvc"   = Get-ProcessID -ServiceName "PcaSvc"
-    "explorer" = (Get-Process explorer).Id
-    "dwm"      = (Get-Process dwm).Id
+    "explorer" = Get-ProcessID -ServiceName "explorer"
+    "dwm"      = Get-ProcessID -ServiceName "dwm"
 }
 $processList3 = @{
     "dnscache" = Get-ProcessID -ServiceName "Dnscache"
