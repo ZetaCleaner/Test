@@ -111,7 +111,7 @@ else {
 }
 
 Clear-Host
-Write-Host "`n`n`n-------------------------"-ForegroundColor yellow
+Write-Host "`n`n`n-------------------------"-ForegroundColor red
 Write-Host "|   Script is Running   |" -ForegroundColor yellow
 Write-Host "|      Please Wait      |" -ForegroundColor yellow
 Write-Host "-------------------------`n"-ForegroundColor yellow
@@ -527,18 +527,25 @@ Get-Content "$dmppath\Paths.txt" | ForEach-Object { if (Test-Path $_) { $signatu
 
 $paths = Get-Content $dmppath\Paths.txt
 
+$exceptionList = @(
+    "C:\RAGEMP\updater.exe"
+)
+
+
 $filesizeFound = @()
 $noFilesFound = @()
 Get-Content "$dmppath\Paths.txt" | ForEach-Object {
     $fPa = $_
-    if (Test-Path $fPa) {
-        $fSi = (Get-Item $fPa).Length
-        if ($fSi -ge ($filesizeL) -and $fSi -le ($filesizeH)) {
-            $filesizeFound += $fPa
+    
+if ($exceptionList -notcontains $fPa) {
+        if (Test-Path $fPa) {
+            $fSi = (Get-Item $fPa).Length
+            if ($fSi -ge ($filesizeL) -and $fSi -le ($filesizeH)) {
+                $filesizeFound += $fPa
+            }
+        } else {
+            $noFilesFound += "File Deleted: $fPa"
         }
-    }
-    else {
-        $noFilesFound += "File Deleted: $fPa"
     }
 }
 $filesizeFound | Out-File "$dmppath\Filesize.txt"
